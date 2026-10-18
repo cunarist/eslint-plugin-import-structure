@@ -13,7 +13,7 @@ function duplicateX(line: number, column: number): Record<string, unknown> {
 }
 
 // Every case below `type-only imports` was run through the original Deno rule
-// (`jsr:@cunarist/deno-import-check/lint` 0.9.0, `deno lint`), and the reports
+// (`deno-import-check` 0.9.0 from JSR, its `./lint` entry, under `deno lint`), and the reports
 // listed are exactly the ones it gave.
 testRule("no-duplicate-import-source", noDuplicateImportSourceRule, {
   valid: [

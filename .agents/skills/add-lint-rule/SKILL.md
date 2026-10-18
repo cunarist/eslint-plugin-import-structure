@@ -1,6 +1,6 @@
 ---
 name: add-lint-rule
-description: Add a rule to a @cunarist/eslint-plugin-* repo (only when the user asked for that rule); the files to create, dual ESLint+Oxlint tests, config registration, docs regeneration
+description: Add a rule to a eslint-plugin-* repo (only when the user asked for that rule); the files to create, dual ESLint+Oxlint tests, config registration, docs regeneration
 ---
 
 The published plugin holds exactly the rules the user decided on; never add

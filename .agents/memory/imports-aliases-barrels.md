@@ -17,7 +17,7 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   folder's `index.ts` owns that folder and everything below it; an alias to
   any other file owns only that file.
 - **No overlap.** No file may be owned by 2 aliases: no alias inside another
-  alias's area, and no 2 aliases with the same target. the modules plugin's
+  alias's area, and no 2 aliases with the same target. the import-structure plugin's
   `enforce-layer-order` reports it once at the top of every file 2 aliases
   claim. Fix by merging the aliases or moving files apart.
 - **Outside an area, only the exact alias reaches it.** A deeper alias
@@ -76,7 +76,7 @@ Relative imports are written with the `.ts` extension.
 ## Local convention: aliases target direct `src/` subfolders
 
 This is a convention of this repo only, stricter than the general rule
-above (which the published modules plugin checks and which allows more). It
+above (which the published import-structure plugin checks and which allows more). It
 is not a plugin rule: keep it out of plugin code, the README, and rule docs.
 
 - Every `package.json` `imports` alias points only at the `index.ts` of a

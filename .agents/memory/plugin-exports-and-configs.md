@@ -7,8 +7,8 @@ description: The plugin is the package's only (default) export; one config per f
 - The package has **only a default export**: the plugin object. No named
   exports (`concreteConfig`, rule objects), as ESLint plugins do.
 - Namespace comes from the package name, ESLint's convention:
-  `@cunarist/eslint-plugin-explicit-types` → `@cunarist/explicit-types`, so a
-  rule id is `@cunarist/explicit-types/no-keyof`. Oxlint normalizes
+  `eslint-plugin-explicit-types` → `explicit-types`, so a
+  rule id is `explicit-types/no-keyof`. Oxlint normalizes
   `meta.name` the same way (verified).
 - `meta.name` and `meta.version` are **written out** in `src/plugin/index.ts`, never
   imported from `package.json` (no non-`.ts` imports). A release bumps both;
@@ -31,7 +31,7 @@ description: The plugin is the package's only (default) export; one config per f
   ```
 
 - Usage: ESLint `export default [plugin.configs.concrete]`; Oxlint
-  `jsPlugins: ["@cunarist/eslint-plugin-explicit-types"]` plus
+  `jsPlugins: ["eslint-plugin-explicit-types"]` plus
   `rules: { ...plugin.configs.concrete.rules }`, since Oxlint plugins carry no
   configs. (Whether Oxlint accepts `extends: [plugin.configs.x]` is untested.)
 - No shared lint-config package exists; each consumer writes its own config.

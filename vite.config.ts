@@ -1,6 +1,6 @@
 import { defineConfig } from "vite-plus";
 
-import modules from "#plugin";
+import importStructure from "#plugin";
 
 import projectLint from "./scripts/project-lint.ts";
 
@@ -11,7 +11,7 @@ export default defineConfig({
     // rule list and repo-only rules, never published.
     jsPlugins: ["./src/plugin/index.ts", "./scripts/project-lint.ts"],
     categories: { correctness: "error", suspicious: "error", pedantic: "error", perf: "error" },
-    rules: { ...modules.configs.all.rules, ...projectLint.configs.project.rules },
+    rules: { ...importStructure.configs.all.rules, ...projectLint.configs.project.rules },
     // The rule registry must import every rule, more than max-dependencies allows.
     overrides: [{ files: ["src/rules/index.ts"], rules: { "import/max-dependencies": "off" } }],
     options: {
