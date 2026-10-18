@@ -1,5 +1,5 @@
 ---
-description: Rule docs in docs/rules/<rule>.md (ESLint core layout); README rules list and doc headers come from eslint-doc-generator after vp pack; README under 60 lines
+description: Rule docs in docs/rules/<rule>.md (ESLint core layout); README rules list and doc headers come from eslint-doc-generator after vp pack
 ---
 
 ## Rule docs
@@ -49,8 +49,8 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 
 ## README
 
-- Under **60 lines**, for library users only (no contributor content).
+- For library users only (no contributor content).
 - States that it targets both ESLint and Oxlint and needs Node.js 22.18+.
 - Shows install plus ESLint and Oxlint usage, one short paragraph per config,
   then the generated rules list. It links to the rule docs, never repeats
-  them. (lit's 82-rule list can't fit 60 lines; that is a flagged open point.)
+  them.
