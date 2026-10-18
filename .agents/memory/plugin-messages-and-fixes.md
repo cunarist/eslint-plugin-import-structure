@@ -46,5 +46,5 @@ export const noKeyofRule: ExplicitRule = {
 - The fix lives in the rule's own file. Every fix and suggestion is tested
   under both linters ([[plugin-dual-ruletester]]).
 - A fix must refuse rather than guess when comments or other statements sit
-  in the range it would rewrite (import-check's `enforce-import-order` does
+  in the range it would rewrite (the modules plugin's `enforce-import-order` does
   this).

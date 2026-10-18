@@ -40,7 +40,7 @@ lint: {
   Hand-written code is never ignored.
 - **No lint disable comments**: [[lint-no-disable-comments]].
 - **Parity:** [[lint-parity-never-shrinks]]. **Naming:** [[naming-id-match]].
-- Don't add a second import sorter; import-check's `enforce-import-order` is
+- Don't add a second import sorter; the modules plugin's `enforce-import-order` is
   the only one, and Oxfmt's `sortImports` stays off.
 
 `perf` came last: in the template it flagged nine `.includes` on constant

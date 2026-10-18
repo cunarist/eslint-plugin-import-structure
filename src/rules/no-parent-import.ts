@@ -4,21 +4,19 @@ import {
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
-  isInModuleScope,
-  normalizePath,
-  parentDir,
+  isClaimedBy,
   quoteLike,
-  resolveFrom,
+  resolveLocalSpecifier,
   visitSpecifiers,
 } from "#helpers";
 
 /**
- * `no-parent-import` — rejects `../` specifiers, rewriting one to its `#`
- * entry where `package.json` declares an entry for the same file.
+ * `no-parent-import` - rejects `../` specifiers in every file, owned by an
+ * alias or not, rewriting one to its `#` alias where `package.json` declares
+ * an alias for exactly that file.
  *
- * Reaching up and back down couples two modules through their file layout
- * instead of their public surface. Files outside every `#` module, such as
- * `tests/` reaching `../scripts/build.ts`, may import each other by path.
+ * Reaching up and back down couples two files through their layout instead
+ * of a name. Anything above a file is reached through an alias.
  */
 export const noParentImportRule: ExplicitRule = {
   meta: {
@@ -36,13 +34,15 @@ export const noParentImportRule: ExplicitRule = {
   },
   create(context) {
     return visitSpecifiers((node, specifier) => {
-      if (!specifier.startsWith("../") || !isInModuleScope(context.filename, specifier)) {
+      if (!specifier.startsWith("../")) {
         return;
       }
       const config = findImportsConfig(context.filename);
-      const resolved = resolveFrom(parentDir(normalizePath(context.filename)), specifier);
-      const entry = config?.byTarget.get(resolved);
-      if (entry === undefined) {
+      const resolved = resolveLocalSpecifier(context.filename, specifier);
+      const entry = resolved === null ? undefined : config?.byTarget.get(resolved);
+      // The alias of the importing file's own area is no fix: that import is
+      // a cycle, which "enforce-layer-order" reports.
+      if (config === null || entry === undefined || isClaimedBy(config, context.filename, entry)) {
         context.report({ node, messageId: "parentImport", data: { specifier } });
         return;
       }

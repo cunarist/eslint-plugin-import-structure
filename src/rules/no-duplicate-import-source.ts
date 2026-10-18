@@ -19,7 +19,7 @@ function mergeableImports(group: TSESTree.ImportDeclaration[]): TSESTree.ImportD
 }
 
 /**
- * `no-duplicate-import-source` — rejects separate static import declarations
+ * `no-duplicate-import-source` - rejects separate static import declarations
  * with the same module specifier. Re-exports and dynamic imports are
  * different operations and are left alone.
  *

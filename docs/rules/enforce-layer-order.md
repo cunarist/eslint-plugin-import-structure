@@ -1,16 +1,16 @@
-# @cunarist/import-check/enforce-layer-order
+# @cunarist/modules/enforce-layer-order
 
 📝 Enforce the order of `package.json` `imports` as the layer order.
 
-💼 This rule is enabled in the 🧭 `import-check` [config](https://github.com/cunarist/eslint-plugin-import-check#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
 
 <!-- end auto-generated rule header -->
 
 ## Rule Details
 
-The order of `#` entries in `package.json` `imports` is the layer order,
-top layer first: a module may only import modules declared below it. This
-makes cycles between modules structurally impossible rather than merely
+The order of `#` aliases in `package.json` `imports` is the layer order,
+top layer first: an area may only import aliases declared below its own.
+This makes cycles between areas structurally impossible rather than merely
 detectable, and the `imports` map doubles as documentation of the layers.
 
 ```json
@@ -23,19 +23,21 @@ detectable, and the `imports` map doubles as documentation of the layers.
 }
 ```
 
-- An entry that points at an `index` file, with any extension, owns its whole
-  folder; an entry that points at any other file, `mod.ts` included, owns
-  only that file.
-  A file belongs to the most specific entry that owns it, and files no entry
-  owns, such as scripts, are never checked (see
-  [Modules](../../README.md#modules)).
-- A target is resolved whether it is written as an exact alias, a subpath
-  pattern such as `#components/x.ts`, or a relative path to an entry's file.
-- A file importing its own module's entry point fires too, since that is a
-  cycle waiting to happen. Use a same-folder relative import of the sibling
-  file instead.
-- To fix an upward import, either reorder the two entries or move the shared
-  code into a module declared below both.
+- An alias owns its target: an alias to an `index` file, with any
+  extension, owns its whole folder; an alias to any other file, `mod.ts`
+  included, owns only that file. Aliases may point anywhere. Files no alias
+  owns are never checked (see [Modules](../../README.md#modules)).
+- No file may be owned by 2 aliases: no alias inside another alias's area,
+  and no 2 aliases with the same target. Lint cannot report on
+  `package.json`, so an overlap fires once at the top of every file that 2
+  aliases claim, naming them. Merge the aliases, or move the files apart.
+- A target is resolved whether it is written as an exact alias, a deeper
+  specifier such as `#components/x.ts`, or a relative path to an alias's
+  target.
+- A file importing its own area's alias fires too, since that is a cycle
+  waiting to happen. Use a relative import of the sibling file instead.
+- To fix an upward import, either reorder the two aliases or move the shared
+  code into an area declared below both.
 
 Examples of **incorrect** code for this rule:
 
@@ -43,6 +45,12 @@ Examples of **incorrect** code for this rule:
 // in ./src/utils/format.ts
 import { Button } from "#components";
 import { helper } from "#utils";
+```
+
+```jsonc
+// every file in src/utils/sub/ is owned by both
+"#utils": "./src/utils/index.ts",
+"#utils-sub": "./src/utils/sub/index.ts"
 ```
 
 Examples of **correct** code for this rule:
@@ -55,4 +63,4 @@ import { helper } from "./helper.ts";
 
 ## When Not To Use It
 
-If your `imports` entries are not ordered by layer, turn this rule off.
+If your `imports` aliases are not ordered by layer, turn this rule off.

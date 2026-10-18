@@ -3,7 +3,7 @@ import type { TSESTree } from "@typescript-eslint/types";
 import { docsUrl, type ExplicitRule } from "#helpers";
 
 /**
- * `no-wildcard-import` — requires imports to name the bindings they depend
+ * `no-wildcard-import` - requires imports to name the bindings they depend
  * on, so `import * as name` is rejected, `type` or not.
  *
  * An explicit list keeps each file's dependency surface narrow and visible at

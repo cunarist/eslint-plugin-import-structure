@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "#a": "./a/index.ts",
+    "#f": "./b/f.ts",
+    "#deep": "./src/x/y/index.ts",
+    "#tool": "./tools/lint.ts",
+    "#gen": "./build/generated.ts"
+  }
+}

@@ -12,9 +12,9 @@ practice.
   rule. It is not a precedent for apps.
 - **`scripts/**`:** a narrow override is allowed when a tooling script truly
   needs it, e.g. `no-console` in a CLI script.
-- **`vite.config.ts`** counts as tooling too, but needs no override: the
-  folder-layout rules only check imports from or into a `#` module, so it
-  imports `./scripts/project-lint.ts` relatively (2026-10-16).
+- **`vite.config.ts`** counts as tooling too, but needs no override: no
+  alias owns `scripts/project-lint.ts`, so it imports it as
+  `./scripts/project-lint.ts` (unowned files import `./` paths freely).
 - **Never for size.** `max-lines` is not turned off anywhere, `scripts/**`
   included; split the file. Every remaining override or opt-out carries a
   one-line comment saying why.
@@ -43,9 +43,3 @@ import { b } from "#ui/dialog";
 // after: one barrel
 import { a, b } from "#ui";
 ```
-
-Measured on memona before the move (Oxlint 1.87, default limits): 921
-pedantic hits in 274 files, of which `max-lines-per-function` 206,
-`max-lines` 145, `max-classes-per-file` 59, `max-dependencies` 45 (median 14
-imports, worst 29). The user chose refactoring over raising limits or
-matching memona's old hugoalh limits (2048 lines per file, no function limit).

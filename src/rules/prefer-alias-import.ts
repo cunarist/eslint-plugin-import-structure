@@ -4,18 +4,17 @@ import {
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
-  findOwningEntry,
-  normalizePath,
-  parentDir,
+  isClaimedBy,
   quoteLike,
-  resolveFrom,
+  resolveLocalSpecifier,
   visitSpecifiers,
 } from "#helpers";
 
 /**
- * `prefer-alias-import` — requires the `#` alias when a `./` specifier
- * crosses into another folder whose file `package.json` already declares as
- * an entry. Same-folder siblings are left alone.
+ * `prefer-alias-import` - requires the `#` alias when a `./` specifier names
+ * the exact target of an alias from outside that alias's area, a same-folder
+ * sibling included. An alias owns its target, so its target has one spelling
+ * everywhere outside it.
  *
  * One spelling per module keeps `package.json` `imports` the single source of
  * truth, and keeps the layer rules from being sidestepped by a path.
@@ -41,22 +40,14 @@ export const preferAliasImportRule: ExplicitRule = {
         return;
       }
       const config = findImportsConfig(context.filename);
-      if (config === null) {
+      const resolved = resolveLocalSpecifier(context.filename, specifier);
+      const entry = resolved === null ? undefined : config?.byTarget.get(resolved);
+      if (config === null || entry === undefined) {
         return;
       }
-      const here = parentDir(normalizePath(context.filename));
-      const resolved = resolveFrom(here, specifier);
-      // A same-folder sibling is the form every other rule recommends.
-      if (parentDir(resolved) === here) {
-        return;
-      }
-      const entry = config.byTarget.get(resolved);
-      if (entry === undefined) {
-        return;
-      }
-      // Reaching your own entry point is never fixed by switching to the
-      // alias, so "enforce-layer-order" owns that case alone.
-      if (findOwningEntry(config, context.filename)?.index === entry.index) {
+      // Reaching the entry point of the importing file's own area is never
+      // fixed by switching to the alias, so "enforce-layer-order" owns it.
+      if (isClaimedBy(config, context.filename, entry)) {
         return;
       }
       context.report({

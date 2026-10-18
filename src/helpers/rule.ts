@@ -30,3 +30,6 @@ export interface ExplicitRuleTypes {
 
 /** A rule in this package, in ESLint's standard `create` form. */
 export type ExplicitRule = RuleDefinition<ExplicitRuleTypes>;
+
+/** The context a rule in this package receives in `create`. */
+export type ExplicitContext = Parameters<ExplicitRule["create"]>[0];

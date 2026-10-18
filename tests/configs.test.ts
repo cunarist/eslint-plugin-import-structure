@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import plugin from "#plugin";
 
-const NAMESPACE = "@cunarist/import-check";
+const NAMESPACE = "@cunarist/modules";
 
 /**
  * The rules this plugin was ported with, and nothing else. A repo-only
@@ -35,7 +35,7 @@ describe("plugin.configs.all", () => {
     expect(Object.keys(plugin.configs.all.rules ?? {}).toSorted()).toEqual(ruleIds.toSorted());
   });
 
-  it("equals the import-check config, the only ported rule set", () => {
-    expect(plugin.configs.all.rules).toEqual(plugin.configs["import-check"].rules);
+  it("equals the modules config, the only ported rule set", () => {
+    expect(plugin.configs.all.rules).toEqual(plugin.configs.modules.rules);
   });
 });

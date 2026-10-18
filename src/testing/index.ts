@@ -58,8 +58,8 @@ const eslintTester = new EslintRuleTester({
  * Oxlint's tester, seen through the one method this harness calls.
  *
  * Oxlint types `run` against its own `Rule`, which ESLint's `RuleDefinition`
- * does not satisfy on paper — `meta.docs` lacks an index signature and the
- * two `sourceCode` shapes differ — although Oxlint runs ESLint rules as they
+ * does not satisfy on paper - `meta.docs` lacks an index signature and the
+ * two `sourceCode` shapes differ - although Oxlint runs ESLint rules as they
  * are. Widening the parameter here is the one place the two type systems are
  * bridged; the Oxlint half of every test is what proves the runtime agrees.
  */

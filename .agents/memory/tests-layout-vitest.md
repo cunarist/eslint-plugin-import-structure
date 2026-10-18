@@ -16,8 +16,7 @@ Decided 2026-10-14 for all repos.
   internals. `vp test tests` runs just these.
 - **No in-source tests** (`import.meta.vitest`).
 - **`scripts/` gets no tests** (2026-10-15): it is repo tooling, not
-  production code (`project-lint.ts`, `decorators.ts`, `lit-check.ts`,
-  release helpers).
+  production code (the `project-lint*.ts` files).
 - Test files follow every lint rule; no relaxed overrides for tests.
 
 ## Migrating Deno tests

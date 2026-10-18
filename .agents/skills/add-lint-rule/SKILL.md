@@ -37,8 +37,7 @@ Use a new branch and PR. For a rule id `my-rule` (kebab-case):
    vp pack && npm run docs
    ```
 
-   This writes the doc header and the README rules list. Keep the README
-   under 60 lines.
+   This writes the doc header and the README rules list.
 
 7. **Verify** before pushing:
 

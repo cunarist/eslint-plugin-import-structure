@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["22", latest]
+        node: ["22.18.0", latest]
     steps:
       - uses: actions/checkout@v4
       - uses: voidzero-dev/setup-vp@v1.21.2

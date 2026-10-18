@@ -156,5 +156,19 @@ testRule("enforce-import-order", enforceImportOrderRule, {
       code: 'import {\n  zeta, // last\n  alpha,\n} from "#paths";\n',
       errors: [{ messageId: "memberOrder" }],
     },
+
+    // sorts type-only imports in with the rest, by source alone
+    {
+      code: 'import { b } from "#utils";\nimport type { A } from "#components";\n',
+      output: 'import type { A } from "#components";\nimport { b } from "#utils";\n',
+      errors: [
+        { messageId: "sourceOrder", data: { specifier: "#components", previous: "#utils" } },
+      ],
+    },
+    {
+      code: 'import type { A } from "./types.ts";\n\nimport { b } from "#utils";\n',
+      output: 'import { b } from "#utils";\n\nimport type { A } from "./types.ts";\n',
+      errors: [{ messageId: "groupOrder", data: { group: ALIAS, previous: RELATIVE } }],
+    },
   ],
 });

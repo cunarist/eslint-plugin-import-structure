@@ -1,31 +1,31 @@
 import type { RuleTextEdit } from "@eslint/core";
 
 import {
+  deeperAliasOwner,
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
   findPatternEntry,
   isInModuleScope,
-  patternOwner,
   quoteLike,
   visitSpecifiers,
 } from "#helpers";
 
 /**
- * `no-barrel-bypass` — rejects reaching past a module's entry point through a
- * `#` subpath pattern, such as `#components/internal.ts` through
- * `"#components/*"`.
+ * `no-barrel-bypass` - rejects a `#` specifier deeper than an alias, such as
+ * `#components/internal.ts` beside `#components`, whether or not a subpath
+ * pattern makes it resolve, and any use of a subpath pattern that reaches
+ * into an owned area.
  *
- * Whatever a file needs should be re-exported from the module's entry point,
- * so the module keeps one public surface. A pattern that only links files
- * outside every `#` module is left alone. Switching to that entry point is a
- * suggestion, since the entry point may not export the name yet.
+ * Code outside an alias's area reaches it only through the exact alias, so
+ * the area keeps one public surface. Switching to the alias is a suggestion,
+ * since its target may not export the name yet.
  */
 export const noBarrelBypassRule: ExplicitRule = {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Disallow `#` specifiers that reach past a module's entry point",
+      description: "Disallow `#` specifiers deeper than an alias",
       url: docsUrl("no-barrel-bypass"),
     },
     hasSuggestions: true,
@@ -45,13 +45,16 @@ export const noBarrelBypassRule: ExplicitRule = {
       if (config === null || config.bySpecifier.has(specifier)) {
         return;
       }
-      const pattern = findPatternEntry(config, specifier);
-      if (pattern === null || !isInModuleScope(context.filename, specifier)) {
-        return;
-      }
-      const owner = patternOwner(config, pattern);
+      const owner = deeperAliasOwner(config, specifier);
       if (owner === null) {
-        context.report({ node, messageId: "internals", data: { specifier } });
+        // A pattern no exact alias sits under, such as a catch-all "#/*",
+        // still makes files reachable past their alias.
+        if (
+          findPatternEntry(config, specifier) !== null &&
+          isInModuleScope(context.filename, specifier)
+        ) {
+          context.report({ node, messageId: "internals", data: { specifier } });
+        }
         return;
       }
       context.report({

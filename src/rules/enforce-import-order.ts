@@ -4,6 +4,7 @@ import type { TSESTree } from "@typescript-eslint/types";
 import {
   compareSpecifiers,
   docsUrl,
+  type ExplicitContext,
   type ExplicitRule,
   type ExplicitSourceCode,
   fixedOrder,
@@ -133,7 +134,79 @@ function fixImportBlock(
 }
 
 /**
- * `enforce-import-order` — groups imports as packages, then `#` aliases, then
+ * Reports the first import member that sorts before the one ahead of it, with
+ * a fix that sorts the whole member list when it is safe. Returns whether a
+ * report was made.
+ */
+function reportMemberOrder(
+  context: ExplicitContext,
+  source: ExplicitSourceCode,
+  imports: TSESTree.ImportDeclaration[],
+): boolean {
+  for (const node of imports) {
+    const members = namedSpecifiers(node);
+    for (const [index, member] of members.entries()) {
+      const before = members[index - 1];
+      if (before === undefined) {
+        continue;
+      }
+      const name = memberName(member);
+      const previous = memberName(before);
+      if (compareMembers(name, previous) >= 0) {
+        continue;
+      }
+      const fix = fixMemberOrder(source, node, members);
+      context.report({
+        node: member,
+        messageId: "memberOrder",
+        data: { name, previous },
+        ...(fix === null ? {} : { fix }),
+      });
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Reports the first import out of group order, sort order, or blank-line
+ * spacing, with a fix that rewrites the whole block when it is safe.
+ */
+function reportImportOrder(
+  context: ExplicitContext,
+  source: ExplicitSourceCode,
+  body: TSESTree.ProgramStatement[],
+  imports: TSESTree.ImportDeclaration[],
+): void {
+  const entries: ImportEntry[] = imports.map((node) => ({
+    node,
+    specifier: node.source.value,
+    group: importGroup(node.source.value),
+  }));
+  for (const [index, current] of entries.entries()) {
+    const previous = entries[index - 1];
+    if (previous === undefined) {
+      continue;
+    }
+    const between = source.text.slice(previous.node.range[1], current.node.range[0]);
+    const blankLine = (between.match(NEWLINE_PATTERN) ?? []).length >= 2;
+    const problem = orderProblem(previous, current, blankLine);
+    if (problem === null) {
+      continue;
+    }
+    const fix = fixImportBlock(source, body, entries);
+    context.report({
+      node: current.node,
+      messageId: problem.messageId,
+      data: Object.fromEntries(problem.data),
+      ...(fix === null ? {} : { fix }),
+    });
+    return;
+  }
+}
+
+/**
+ * `enforce-import-order` - groups imports as packages, then `#` aliases, then
  * relative paths, separated by a blank line and each sorted by code point.
  * Names inside the braces are sorted too, ignoring case and any `type`
  * modifier.
@@ -168,54 +241,8 @@ export const enforceImportOrderRule: ExplicitRule = {
           (statement): statement is TSESTree.ImportDeclaration =>
             statement.type === "ImportDeclaration",
         );
-
-        for (const node of imports) {
-          const members = namedSpecifiers(node);
-          for (const [index, member] of members.entries()) {
-            const before = members[index - 1];
-            if (before === undefined) {
-              continue;
-            }
-            const name = memberName(member);
-            const previous = memberName(before);
-            if (compareMembers(name, previous) >= 0) {
-              continue;
-            }
-            const fix = fixMemberOrder(source, node, members);
-            context.report({
-              node: member,
-              messageId: "memberOrder",
-              data: { name, previous },
-              ...(fix === null ? {} : { fix }),
-            });
-            return;
-          }
-        }
-
-        const entries: ImportEntry[] = imports.map((node) => ({
-          node,
-          specifier: node.source.value,
-          group: importGroup(node.source.value),
-        }));
-        for (const [index, current] of entries.entries()) {
-          const previous = entries[index - 1];
-          if (previous === undefined) {
-            continue;
-          }
-          const between = source.text.slice(previous.node.range[1], current.node.range[0]);
-          const blankLine = (between.match(NEWLINE_PATTERN) ?? []).length >= 2;
-          const problem = orderProblem(previous, current, blankLine);
-          if (problem === null) {
-            continue;
-          }
-          const fix = fixImportBlock(source, body, entries);
-          context.report({
-            node: current.node,
-            messageId: problem.messageId,
-            data: Object.fromEntries(problem.data),
-            ...(fix === null ? {} : { fix }),
-          });
-          return;
+        if (!reportMemberOrder(context, source, imports)) {
+          reportImportOrder(context, source, body, imports);
         }
       },
     };

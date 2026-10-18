@@ -14,7 +14,7 @@ import {
 } from "#helpers";
 
 /**
- * `enforce-mod-file` — requires module entry points to be named `index.ts`,
+ * `enforce-mod-file` - requires module entry points to be named `index.ts`,
  * the Node.js convention. Reports both a file named `mod` and any project
  * specifier pointing at one.
  *

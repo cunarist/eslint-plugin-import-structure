@@ -8,11 +8,15 @@
     "verbatimModuleSyntax": true,
     "declaration": true,
     "isolatedDeclarations": true,
-    "exactOptionalPropertyTypes": true,
+    "strict": true,
     "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false
   }
 }

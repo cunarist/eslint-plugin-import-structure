@@ -1,11 +1,11 @@
 /**
- * `@cunarist/eslint-plugin-import-check` — import rules that keep a module
+ * `@cunarist/eslint-plugin-modules` - import rules that keep a module
  * graph free of cycles and clearly layered, with the order of the
  * `package.json` `imports` field as the layer order.
  *
- * One plugin, namespace `@cunarist/import-check`, so a rule id reads
- * `@cunarist/import-check/enforce-layer-order`. Its configs are
- * `import-check`, the rules it was ported with, and `all`, which turns on
+ * One plugin, namespace `@cunarist/modules`, so a rule id reads
+ * `@cunarist/modules/enforce-layer-order`. Its configs are
+ * `modules`, the rules it was ported with, and `all`, which turns on
  * every rule. The plugin is the only export; its configs
  * are at `plugin.configs`.
  *
@@ -19,16 +19,16 @@ import type { ConfigObject, Plugin } from "@eslint/core";
 import { rules } from "#rules";
 
 /** The prefix of every rule id, as ESLint derives it from the package name. */
-const NAMESPACE = "@cunarist/import-check";
+const NAMESPACE = "@cunarist/modules";
 
 /**
- * The `import-check` preset — every rule the plugin was ported with.
+ * The `modules` preset - every rule the plugin was ported with.
  *
  * Bans the import patterns that create cycles, keeps every module behind one
  * entry point, layers modules by their `package.json` `imports` order, and
  * keeps import blocks grouped and sorted.
  */
-const IMPORT_CHECK: string[] = [
+const MODULES: string[] = [
   "no-self-import",
   "no-parent-import",
   "no-absolute-import",
@@ -42,17 +42,17 @@ const IMPORT_CHECK: string[] = [
   "enforce-layer-order",
 ];
 
-/** The flat configs at `plugin.configs`: `import-check` and `all`. */
-interface ImportCheckConfigs {
-  "import-check": ConfigObject;
+/** The flat configs at `plugin.configs`: `modules` and `all`. */
+interface ModulesConfigs {
+  modules: ConfigObject;
   all: ConfigObject;
 }
 
 /** The plugin, with its configs known by name. */
-interface ImportCheckPlugin {
+interface ModulesPlugin {
   meta?: Plugin["meta"];
   rules?: Plugin["rules"];
-  configs: ImportCheckConfigs;
+  configs: ModulesConfigs;
 }
 
 /** The plugin before its configs exist, which each config refers back to. */
@@ -61,7 +61,7 @@ const basePlugin: Plugin = {
     // Written out rather than imported from `package.json`, so the source has
     // only `.ts` imports. A release bumps both; `tests/package-meta.test.ts`
     // fails if they drift apart.
-    name: "@cunarist/eslint-plugin-import-check",
+    name: "@cunarist/eslint-plugin-modules",
     version: "0.10.0",
     namespace: NAMESPACE,
   },
@@ -82,12 +82,12 @@ function presetConfig(preset: string, ruleIds: string[]): ConfigObject {
 
 /**
  * The plugin, for ESLint `plugins` or Oxlint `jsPlugins`, and the package's
- * only export. Configs: `import-check` holds the ported rules, and
+ * only export. Configs: `modules` holds the ported rules, and
  * `all` turns on every rule, so a new rule joins it by itself.
  */
-const plugin: ImportCheckPlugin = Object.assign(basePlugin, {
+const plugin: ModulesPlugin = Object.assign(basePlugin, {
   configs: {
-    "import-check": presetConfig("import-check", IMPORT_CHECK),
+    modules: presetConfig("modules", MODULES),
     all: presetConfig("all", [...rules.keys()]),
   },
 });

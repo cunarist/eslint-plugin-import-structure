@@ -1,5 +1,5 @@
 ---
-description: package.json imports replace deno.json imports; key order is the layer order; "#x/*" patterns replace trailing-slash mappings
+description: package.json imports replace deno.json imports; key order is the layer order; no "#x/*" patterns, deeper specifiers are bypasses
 ---
 
 `src/helpers/imports.ts` reads the nearest `package.json` `imports` with
@@ -8,13 +8,13 @@ description: package.json imports replace deno.json imports; key order is the la
 `#` keys, which are never integer-like, so the layer order maps 1:1. Neither
 Oxfmt's `package.json` sort nor npm reorders the keys inside `imports`.
 
-- Node.js has no trailing-slash folder mappings (`"#components/"`). They became
-  subpath patterns, `"#components/*": "./src/components/*"`. A pattern whose
-  prefix ends in `/` and has no suffix belongs to the exact entry of the same
-  name (`#components`), which `no-barrel-bypass` suggests and the layer rules
-  resolve to. Longest prefix wins, exact keys before patterns, as in Node.js.
-- A catch-all `"#/*"` is reported by `no-barrel-bypass` like any other pattern,
-  with no entry point to suggest.
+- Node.js has no trailing-slash folder mappings (`"#components/"`), and `/*`
+  subpath patterns are not used either: outside an alias's area only the
+  exact alias reaches it ([[imports-aliases-barrels]]). `no-barrel-bypass`
+  reports any specifier deeper than an alias (`#components/x.ts`), whether or
+  not a pattern makes it resolve, suggesting the alias; the layer rules
+  resolve such a specifier to that alias. A catch-all `"#/*"` is reported
+  too, with no alias to suggest.
 - Only string targets starting with `./` or `../` are read. Package targets
   (`"#lit": "lit"`) and condition objects are ignored, as Deno ignored
   `jsr:`/`npm:` targets.

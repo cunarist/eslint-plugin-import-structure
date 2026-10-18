@@ -7,7 +7,7 @@ import {
 } from "#helpers";
 
 /**
- * `no-self-import` — rejects any statically knowable specifier that resolves
+ * `no-self-import` - rejects any statically knowable specifier that resolves
  * to the importing file: a relative path, an absolute path or `file:` URL, an
  * exact `#` entry, or a `#` subpath pattern.
  *

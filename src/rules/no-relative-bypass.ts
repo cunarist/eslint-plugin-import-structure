@@ -1,31 +1,34 @@
 import {
-  BARREL_STEMS,
   docsUrl,
   type ExplicitRule,
-  isInModuleScope,
-  stemName,
+  findImportsConfig,
+  findOwningEntry,
+  isClaimedBy,
+  resolveLocalSpecifier,
   visitSpecifiers,
 } from "#helpers";
 
 /**
- * `no-relative-bypass` — rejects a `./` specifier that descends more than one
- * level, or lands anywhere in a subfolder but its entry point.
+ * `no-relative-bypass` - rejects a `./` specifier that reaches into an area
+ * an alias owns from outside that area.
  *
- * Together with `no-parent-import` this leaves exactly two ways to reach
- * another module: a sibling file, or a `#` entry. Imports between files
- * outside every `#` module, such as `./scripts/build.ts` from
- * `vite.config.ts`, are left alone.
+ * An alias owns its target: an alias to a folder's `index.ts` owns that
+ * folder and everything below it, and an alias to any other file owns only
+ * that file. Code outside an area reaches it only through the alias. Inside
+ * an area, siblings and subfolders are free, and so are files no alias owns.
+ * A path to an alias's exact target is left to `prefer-alias-import`, which
+ * rewrites it to the alias.
  */
 export const noRelativeBypassRule: ExplicitRule = {
   meta: {
     type: "suggestion",
     docs: {
-      description: "Disallow relative specifiers that reach past a subfolder's entry point",
+      description: "Disallow relative specifiers that reach into an alias's area from outside it",
       url: docsUrl("no-relative-bypass"),
     },
     schema: [],
     messages: {
-      bypass: "'{{specifier}}' reaches past the entry point of './{{folder}}'.",
+      bypass: "'{{specifier}}' reaches into the area of '{{alias}}' from outside it.",
     },
   },
   create(context) {
@@ -35,22 +38,16 @@ export const noRelativeBypassRule: ExplicitRule = {
       if (!specifier.startsWith("./")) {
         return;
       }
-      const segments = specifier
-        .slice(2)
-        .split("/")
-        .filter((segment) => segment !== "" && segment !== ".");
-      const [folder, file] = segments;
-      // A single segment is a sibling file, which is always fine.
-      if (folder === undefined || file === undefined) {
+      const config = findImportsConfig(context.filename);
+      const resolved = resolveLocalSpecifier(context.filename, specifier);
+      if (config === null || resolved === null || config.byTarget.has(resolved)) {
         return;
       }
-      if (segments.length === 2 && BARREL_STEMS.includes(stemName(file))) {
+      const target = findOwningEntry(config, resolved);
+      if (target === null || isClaimedBy(config, context.filename, target)) {
         return;
       }
-      if (!isInModuleScope(context.filename, specifier)) {
-        return;
-      }
-      context.report({ node, messageId: "bypass", data: { specifier, folder } });
+      context.report({ node, messageId: "bypass", data: { specifier, alias: target.specifier } });
     });
   },
 };

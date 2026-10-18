@@ -1,7 +1,11 @@
 /**
- * Looks up the modules a `package.json` `imports` config declares: which
- * module owns a file, which one a specifier names, and whether an import
- * falls under the folder-layout rules.
+ * Looks up the areas the `#` aliases of a `package.json` `imports` config
+ * own: which alias owns a file, which one a specifier names, and whether an
+ * import touches an owned area at all.
+ *
+ * An alias owns its target. An alias to a folder's `index.ts` owns that
+ * folder and everything below it; an alias to any other file owns only that
+ * file. Nothing here depends on folder or file names.
  */
 
 import {
@@ -15,16 +19,61 @@ import {
 import { isInsideDir, normalizePath, parentDir, resolveFrom } from "./paths.ts";
 
 /**
- * Finds the module that owns a file, which is the entry with the most
- * specific directory containing it. Returns `null` for files outside every
- * declared module, such as scripts or config files.
+ * Whether a normalized path lies in the area an alias owns. A folder alias's
+ * area includes the folder path itself, so a directory specifier such as
+ * `./utils` cannot reach the area by path.
+ */
+function ownsPath(entry: ModuleEntry, path: string): boolean {
+  return (
+    entry.target === path ||
+    (entry.isBarrel && (path === entry.dir || isInsideDir(path, entry.dir)))
+  );
+}
+
+/**
+ * Every alias whose area holds a file, in declaration order. More than one
+ * means two aliases overlap, which `enforce-layer-order` reports.
+ */
+export function claimingEntries(config: ImportsConfig, filePath: string): ModuleEntry[] {
+  const path = normalizePath(filePath);
+  return config.entries.filter((entry) => ownsPath(entry, path));
+}
+
+/**
+ * Whether `entry` is among the aliases that claim a file. A file two aliases
+ * overlap on counts as inside both areas, so the overlap is reported once by
+ * `enforce-layer-order` rather than again as a bypass.
+ */
+export function isClaimedBy(config: ImportsConfig, filePath: string, entry: ModuleEntry): boolean {
+  return claimingEntries(config, filePath).some((claimant) => claimant.index === entry.index);
+}
+
+/**
+ * Finds the alias that owns a file, which is the one with the most specific
+ * area containing it. Returns `null` for a file no alias owns.
  */
 export function findOwningEntry(config: ImportsConfig, filePath: string): ModuleEntry | null {
-  const path = normalizePath(filePath);
+  let best: ModuleEntry | null = null;
+  for (const entry of claimingEntries(config, filePath)) {
+    if (best === null || entry.dir.length > best.dir.length) {
+      best = entry;
+    }
+  }
+  return best;
+}
+
+/**
+ * The exact alias a deeper `#` specifier reaches past, such as `#utils` for
+ * `#utils/internal.ts`, whether or not a subpath pattern makes it resolve.
+ * The longest alias wins. Returns `null` when no alias is a prefix.
+ */
+export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   let best: ModuleEntry | null = null;
   for (const entry of config.entries) {
-    const owns = entry.target === path || (entry.isBarrel && isInsideDir(path, entry.dir));
-    if (owns && (best === null || entry.dir.length > best.dir.length)) {
+    if (
+      specifier.startsWith(`${entry.specifier}/`) &&
+      (best === null || entry.specifier.length > best.specifier.length)
+    ) {
       best = entry;
     }
   }
@@ -49,17 +98,6 @@ export function findPatternEntry(config: ImportsConfig, specifier: string): Patt
 }
 
 /**
- * The exact entry a subpath pattern belongs to: `#utils` for `#utils/*`.
- * Returns `null` when the pattern does not end in `/*` or no such entry exists.
- */
-export function patternOwner(config: ImportsConfig, pattern: PatternEntry): ModuleEntry | null {
-  if (!pattern.prefix.endsWith("/") || pattern.suffix !== "") {
-    return null;
-  }
-  return config.bySpecifier.get(pattern.prefix.slice(0, -1)) ?? null;
-}
-
-/**
  * Resolves the module a `#` specifier belongs to, whether it is an exact
  * entry such as `#utils` or a deep one such as `#utils/internal.ts`.
  */
@@ -68,8 +106,7 @@ export function targetModule(config: ImportsConfig, specifier: string): ModuleEn
   if (exact !== undefined) {
     return exact;
   }
-  const pattern = findPatternEntry(config, specifier);
-  return pattern === null ? null : patternOwner(config, pattern);
+  return deeperAliasOwner(config, specifier);
 }
 
 /**
@@ -131,26 +168,17 @@ export function resolveTarget(
   return config.byTarget.get(resolved) ?? null;
 }
 
-/**
- * Whether a path lies in a module some `#` entry owns: the entry's own file,
- * or anything in a barrel entry's folder, the folder itself included.
- */
+/** Whether a path lies in the area some alias owns. */
 export function isModulePath(config: ImportsConfig, path: string): boolean {
   const normalized = normalizePath(path);
-  return config.entries.some(
-    (entry) =>
-      entry.target === normalized ||
-      (entry.isBarrel && (entry.dir === normalized || isInsideDir(normalized, entry.dir))),
-  );
+  return config.entries.some((entry) => ownsPath(entry, normalized));
 }
 
 /**
- * Whether the folder-layout rules check a specifier at all. They guard the
- * folders `#` entries own, so an import is in scope when the importing file
- * or the file it names lies in such a module. Imports between files outside
- * every module, such as `vite.config.ts` reaching `./scripts/build.ts`, are
- * plain file imports and stay unchecked; so is everything in a project whose
- * `package.json` declares no `#` entry.
+ * Whether an import touches an owned area: the importing file or the file it
+ * names lies in one. Imports between files no alias owns, such as
+ * `vite.config.ts` reaching `./scripts/build.ts`, give `false`, and so does
+ * everything in a project whose `package.json` declares no `#` alias.
  */
 export function isInModuleScope(filename: string, specifier: string): boolean {
   const config = findImportsConfig(filename);

@@ -32,6 +32,6 @@ Standing convention (2026-10-12), applied to every package:
   `jsPlugins` and once through ESLint 9 with the configs. On the lit plugin
   this caught two bugs that 313 unit tests missed.
 
-The cunarist lint plugins (explicit-types, import-check, lit) are published
+The cunarist lint plugins (explicit-types, modules, lit) are published
 together, with a token the user provides; the old `deno-*` repos are archived
 only after that, one at a time.

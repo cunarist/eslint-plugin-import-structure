@@ -1,5 +1,5 @@
 ---
-description: Every rule test runs under both ESLint's and Oxlint's RuleTester via testRule, once per rule file, cases in ESLint shape; CI runs them all in one vp test step on node 22 and latest
+description: Every rule test runs under both ESLint's and Oxlint's RuleTester via testRule, once per rule file, cases in ESLint shape; CI runs them all in one vp test step on node 22.18.0 and latest
 ---
 
 `testRule` from `#testing` is called **exactly once per rule file**, with all
@@ -17,8 +17,8 @@ which covers both hosts, the helper unit tests, and `tests/` (2026-10-16:
 the per-host `-t` filter steps were merged into it). `-t " eslint "` still
 works locally to run one host.
 
-CI matrix: node `22` (the minimum) and `latest`; no LTS entry, no Bun (Oxlint's
-tester refuses Bun, and Bun support was dropped).
+CI matrix: node `22.18.0` (the minimum, an exact version) and `latest`; no LTS
+entry, no Bun (Oxlint's tester refuses Bun, and Bun support was dropped).
 
 ## Writing cases
 

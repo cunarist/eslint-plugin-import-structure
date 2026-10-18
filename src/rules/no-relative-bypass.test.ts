@@ -4,19 +4,21 @@ import { noRelativeBypassRule } from "./no-relative-bypass.ts";
 
 const SRC = fixture("src/index.ts");
 
+const COMPONENTS = fixture("src/components/index.ts");
+
 const internalCode = 'import { internal } from "./components/internal.ts";\n';
 
 testRule("no-relative-bypass", noRelativeBypassRule, {
   valid: [
-    // allows a sibling and a child entry point
+    // allows siblings and subfolders at any depth inside one area
     {
-      code: 'import { helper } from "./helper.ts";\nimport { components } from "./components/index.ts";\n',
-      filename: SRC,
+      code: 'import { a } from "./internal.ts";\nimport { b } from "./sub/deep/thing.ts";\n',
+      filename: COMPONENTS,
     },
 
-    // recognizes entry points whatever the extension
+    // leaves an alias's exact target to prefer-alias-import
     {
-      code: 'import { a } from "./components/index.tsx";\nimport { b } from "./components/index.js";\nimport { c } from "./components/index.mts";\n',
+      code: 'import { a } from "./components/index.ts";\nimport { b } from "./app-store.ts";\n',
       filename: SRC,
     },
 
@@ -26,7 +28,7 @@ testRule("no-relative-bypass", noRelativeBypassRule, {
       filename: SRC,
     },
 
-    // lets files outside every "#" module import each other by path
+    // lets files no alias owns be imported by any path, with no index.ts demanded
     {
       code: 'import { decorators } from "./scripts/decorators.ts";\n',
       filename: fixture("vite.config.ts"),
@@ -35,45 +37,58 @@ testRule("no-relative-bypass", noRelativeBypassRule, {
       code: 'import { deep } from "./sub/deep/thing.ts";\n',
       filename: fixture("scripts/build.ts"),
     },
+    {
+      code: 'import { thing } from "./unmapped/thing.ts";\n',
+      filename: fixture("src/utils/index.ts"),
+    },
+    {
+      code: 'import { thing } from "./unmapped/deep/thing.ts";\n',
+      filename: SRC,
+    },
   ],
   invalid: [
-    // rejects reaching past a subfolder entry point
+    // rejects a relative path into an area from outside it
     {
       code: internalCode,
       filename: SRC,
       errors: [
         {
           messageId: "bypass",
-          data: { specifier: "./components/internal.ts", folder: "components" },
+          data: { specifier: "./components/internal.ts", alias: "#components" },
           ...spanOf(internalCode, '"./components/internal.ts"'),
         },
       ],
     },
 
-    // treats a child mod file as an internal file, not an entry point
+    // treats a mod file in an area as an internal file, not an entry point
     {
       code: 'import { legacy } from "./components/mod.ts";\n',
       filename: SRC,
       errors: [
-        { messageId: "bypass", data: { specifier: "./components/mod.ts", folder: "components" } },
+        { messageId: "bypass", data: { specifier: "./components/mod.ts", alias: "#components" } },
       ],
     },
 
-    // rejects descending more than one level, even to an entry point
+    // sees a re-export, a dynamic import, and a deep path into an area
     {
-      code: 'import { deep } from "./src/components/index.ts";\n',
+      code: 'export * from "./src/utils/a.ts";\nconst m = await import("./src/utils/sub/b.ts");\n',
       filename: fixture("index.ts"),
       errors: [
-        { messageId: "bypass", data: { specifier: "./src/components/index.ts", folder: "src" } },
+        { messageId: "bypass", data: { specifier: "./src/utils/a.ts", alias: "#utils" } },
+        { messageId: "bypass", data: { specifier: "./src/utils/sub/b.ts", alias: "#utils" } },
       ],
     },
 
-    // checks a module file even when the target lies outside every module
+    // treats type-only imports like any other import
     {
-      code: 'import { thing } from "./unmapped/thing.ts";\n',
-      filename: fixture("src/utils/index.ts"),
+      code: 'import type { Internal } from "./components/internal.ts";\nexport type { X } from "./components/x.ts";\n',
+      filename: SRC,
       errors: [
-        { messageId: "bypass", data: { specifier: "./unmapped/thing.ts", folder: "unmapped" } },
+        {
+          messageId: "bypass",
+          data: { specifier: "./components/internal.ts", alias: "#components" },
+        },
+        { messageId: "bypass", data: { specifier: "./components/x.ts", alias: "#components" } },
       ],
     },
   ],

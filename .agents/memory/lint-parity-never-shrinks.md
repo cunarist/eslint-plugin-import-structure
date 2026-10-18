@@ -29,7 +29,7 @@ Before removing any line from `configs.project`, find what else covers it.
   in packages.
 - **Vacuous:** JSX rules (no `.tsx` exists) and Deno-only rules.
 - **`@hugoalh` rules** map to Oxlint built-ins in `configs.project`.
-- **import-check's CLI cycle check** → `import/no-cycle`.
+- **deno-import-check's CLI cycle check** → `import/no-cycle`.
 
 The template's list in `configs.project` is the baseline to copy: `curly`,
 `guard-for-in`, `no-console`, `no-empty`, `no-regex-spaces`,

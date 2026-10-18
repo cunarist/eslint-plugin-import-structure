@@ -1,5 +1,5 @@
 {
-  "name": "@cunarist/eslint-plugin-import-check",
+  "name": "@cunarist/eslint-plugin-modules",
   "version": "0.10.0",
   "description": "ESLint and Oxlint rules that keep a module graph layered and free of cycles, with package.json \"#\" imports as the layer order.",
   "keywords": [
@@ -11,7 +11,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cunarist/eslint-plugin-import-check.git"
+    "url": "git+https://github.com/cunarist/eslint-plugin-modules.git"
   },
   "files": [
     "dist"
@@ -41,12 +41,12 @@
     "vite-plus": "^1.1.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   },
   "eslint-doc-generator": {
     "configEmoji": [
       [
-        "import-check",
+        "modules",
         "🧭"
       ]
     ],
@@ -62,6 +62,6 @@
       "Rule Details",
       "When Not To Use It"
     ],
-    "urlConfigs": "https://github.com/cunarist/eslint-plugin-import-check#configs-and-rules"
+    "urlConfigs": "https://github.com/cunarist/eslint-plugin-modules#configs-and-rules"
   }
 }

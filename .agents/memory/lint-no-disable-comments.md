@@ -11,7 +11,7 @@ Oxlint (1.87) has no `noInlineConfig` and no `eslint-comments` rules, and
 `respectEslintDisableDirectives: false` only ignores `eslint-*` directives. So
 three checks enforce the ban together, and none is redundant:
 
-1. `project/no-disable-comments` (custom, in `scripts/project-lint-comments.ts`) fails
+1. `project/no-disable-comments` (custom, in `scripts/project-lint-source.ts`) fails
    any directive.
 2. `unicorn/no-abusive-eslint-disable` fails a directive that names no rule,
    which would otherwise silence the custom rule on its own line.

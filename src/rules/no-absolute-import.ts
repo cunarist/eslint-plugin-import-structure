@@ -1,7 +1,7 @@
 import { docsUrl, type ExplicitRule, visitSpecifiers } from "#helpers";
 
 /**
- * `no-absolute-import` — rejects specifiers starting with `/` or `file:`.
+ * `no-absolute-import` - rejects specifiers starting with `/` or `file:`.
  *
  * A leading slash resolves against the file system root rather than the
  * project root, and a `file:` URL hard codes one machine's layout.

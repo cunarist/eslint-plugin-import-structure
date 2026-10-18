@@ -145,17 +145,66 @@ function importsField(parsed: unknown): object | null {
 }
 
 /**
- * Reads and parses one config file. Returns `null` when the file
- * is unreadable, is not JSON, or has no local `#` entries.
+ * Parses one config file and returns its `imports` object. `null` when the
+ * file is unreadable, is not JSON, or has no `imports` object.
  */
-function readConfig(configPath: string, configDir: string): ImportsConfig | null {
+function readImportsField(configPath: string): object | null {
   let parsed: unknown = null;
   try {
     parsed = JSON.parse(readFileSync(configPath, "utf8"));
   } catch {
     return null;
   }
-  const imports = importsField(parsed);
+  return importsField(parsed);
+}
+
+/**
+ * Whether an `imports` entry is a `#` alias with a relative string target.
+ * Only those point at local files. A "#" alias for a package, or a condition
+ * object, is legitimate but irrelevant here.
+ */
+function isLocalEntry(specifier: string, value: unknown): value is string {
+  return (
+    specifier.startsWith("#") &&
+    typeof value === "string" &&
+    (value.startsWith("./") || value.startsWith("../"))
+  );
+}
+
+/** A subpath pattern entry, split around the `*` at index `star`. */
+function patternEntry(specifier: string, star: number, target: string): PatternEntry {
+  return {
+    specifier,
+    prefix: specifier.slice(0, star),
+    suffix: specifier.slice(star + 1),
+    target,
+  };
+}
+
+/** An exact entry, resolved from the config directory, declared at `index`. */
+function moduleEntry(
+  configDir: string,
+  specifier: string,
+  value: string,
+  index: number,
+): ModuleEntry {
+  const target = resolveFrom(configDir, value);
+  const isBarrel = BARREL_STEMS.includes(stemName(target));
+  return {
+    specifier,
+    target,
+    dir: isBarrel ? parentDir(target) : target,
+    isBarrel,
+    index,
+  };
+}
+
+/**
+ * Reads and parses one config file. Returns `null` when the file
+ * is unreadable, is not JSON, or has no local `#` entries.
+ */
+function readConfig(configPath: string, configDir: string): ImportsConfig | null {
+  const imports = readImportsField(configPath);
   if (imports === null) {
     return null;
   }
@@ -166,41 +215,22 @@ function readConfig(configPath: string, configDir: string): ImportsConfig | null
   const patterns: PatternEntry[] = [];
 
   for (const [specifier, value] of Object.entries(imports)) {
-    // Only relative string targets point at local files. A "#" alias for a
-    // package, or a condition object, is legitimate but irrelevant here.
-    if (
-      !specifier.startsWith("#") ||
-      typeof value !== "string" ||
-      !(value.startsWith("./") || value.startsWith("../"))
-    ) {
+    if (!isLocalEntry(specifier, value)) {
       continue;
     }
 
     const star = specifier.indexOf("*");
     if (star !== -1) {
-      patterns.push({
-        specifier,
-        prefix: specifier.slice(0, star),
-        suffix: specifier.slice(star + 1),
-        target: value,
-      });
+      patterns.push(patternEntry(specifier, star, value));
       continue;
     }
 
-    const target = resolveFrom(configDir, value);
-    const isBarrel = BARREL_STEMS.includes(stemName(target));
-    const entry: ModuleEntry = {
-      specifier,
-      target,
-      dir: isBarrel ? parentDir(target) : target,
-      isBarrel,
-      index: entries.length,
-    };
+    const entry = moduleEntry(configDir, specifier, value, entries.length);
     entries.push(entry);
     bySpecifier.set(specifier, entry);
     // First declaration wins when two specifiers share a target.
-    if (!byTarget.has(target)) {
-      byTarget.set(target, entry);
+    if (!byTarget.has(entry.target)) {
+      byTarget.set(entry.target, entry);
     }
   }
 

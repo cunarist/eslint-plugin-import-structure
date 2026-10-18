@@ -1,8 +1,8 @@
-# @cunarist/import-check/no-absolute-import
+# @cunarist/modules/no-absolute-import
 
 📝 Disallow absolute paths and `file:` URLs as module specifiers.
 
-💼 This rule is enabled in the 🧭 `import-check` [config](https://github.com/cunarist/eslint-plugin-import-check#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
 
 <!-- end auto-generated rule header -->
 

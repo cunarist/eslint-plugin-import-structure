@@ -19,16 +19,6 @@ testRule("no-parent-import", noParentImportRule, {
       code: 'import { internal } from "./internal.ts";\nimport { utils } from "#utils";\nimport { html } from "#lit";\n',
       filename: COMPONENTS,
     },
-
-    // lets files outside every "#" module import each other by path
-    {
-      code: 'import { build } from "../scripts/build.ts";\n',
-      filename: fixture("tests/a.test.ts"),
-    },
-    {
-      code: 'import { config } from "../vite.config.ts";\n',
-      filename: fixture("scripts/build.ts"),
-    },
   ],
   invalid: [
     // replaces a parent import with its "#" entry
@@ -78,7 +68,26 @@ testRule("no-parent-import", noParentImportRule, {
       errors: [{ messageId: "parentImport", data: { specifier: "../thing.ts" } }],
     },
 
-    // still checks a file outside the modules reaching into one
+    // fires in files no alias owns, too
+    {
+      code: 'import { build } from "../scripts/build.ts";\n',
+      filename: fixture("tests/a.test.ts"),
+      errors: [{ messageId: "parentImport", data: { specifier: "../scripts/build.ts" } }],
+    },
+    {
+      code: 'import { config } from "../vite.config.ts";\n',
+      filename: fixture("scripts/build.ts"),
+      errors: [{ messageId: "parentImport", data: { specifier: "../vite.config.ts" } }],
+    },
+
+    // offers no alias for the importing file's own area entry point
+    {
+      code: 'import { x } from "../index.ts";\n',
+      filename: fixture("src/components/sub/x.ts"),
+      errors: [{ messageId: "parentImport", data: { specifier: "../index.ts" } }],
+    },
+
+    // a file outside every area reaching into one
     {
       code: 'import { utils } from "../src/utils/index.ts";\n',
       filename: fixture("tests/a.test.ts"),
@@ -86,6 +95,14 @@ testRule("no-parent-import", noParentImportRule, {
       errors: [
         { messageId: "useAlias", data: { specifier: "../src/utils/index.ts", alias: "#utils" } },
       ],
+    },
+
+    // treats a type-only import like any other import
+    {
+      code: 'import type { Utils } from "../utils/index.ts";\n',
+      filename: COMPONENTS,
+      output: 'import type { Utils } from "#utils";\n',
+      errors: [TO_UTILS],
     },
   ],
 });

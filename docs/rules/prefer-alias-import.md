@@ -1,8 +1,8 @@
-# @cunarist/import-check/prefer-alias-import
+# @cunarist/modules/prefer-alias-import
 
 📝 Require the `#` alias for a module that `package.json` declares.
 
-💼 This rule is enabled in the 🧭 `import-check` [config](https://github.com/cunarist/eslint-plugin-import-check#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
 
 🔧 This rule is automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/latest/user-guide/command-line-interface#--fix).
 
@@ -10,34 +10,39 @@
 
 ## Rule Details
 
-When `package.json` declares a `#` entry for a module, that entry is the
-module's name. Reaching the same file through a `./` path gives it a second
+An alias owns its target, so its target has one spelling everywhere outside
+it: the alias. Reaching the same file through a `./` path gives it a second
 spelling, which hides the dependency from anyone searching for the alias and
 lets a path sidestep the layer order of
 [`enforce-layer-order`](enforce-layer-order.md).
 
-- Only `./` specifiers that leave the current folder fire, and only when an
-  entry points at exactly the resolved file. The fix swaps in the alias,
-  keeping the quote style.
-- A same-folder sibling is never reported, even if it has an alias: that is the
-  form every other rule recommends.
-- A path to the importing file's own module entry point is left to
+- A `./` specifier fires when an alias points at exactly the resolved file
+  and the importing file lies outside that alias's area, a same-folder
+  sibling of a file alias included. The fix swaps in the alias, keeping the
+  quote style.
+- A path to the importing file's own area entry point is left to
   `enforce-layer-order`, since switching to the alias would not fix it.
-- `../` specifiers are left to [`no-parent-import`](no-parent-import.md),
-  which offers the same rewrite.
+- A path to another file inside an area is left to
+  [`no-relative-bypass`](no-relative-bypass.md), and `../` specifiers to
+  [`no-parent-import`](no-parent-import.md), which offers the same rewrite.
 
 Examples of **incorrect** code for this rule:
 
 ```ts
-// in ./src/index.ts, with "#components": "./src/components/index.ts"
-import { Button } from "./components/index.ts";
+// "#a": "./a/index.ts", "#f": "./b/f.ts"
+// in main.ts
+import { a } from "./a/index.ts";
+import { f } from "./b/f.ts";
+// in b/g.ts, which no alias owns
+import { f } from "./f.ts";
 ```
 
 Examples of **correct** code for this rule:
 
 ```ts
-import { Button } from "#components";
-import { store } from "./app-store.ts";
+import { a } from "#a";
+import { f } from "#f";
+import { g } from "./b/g.ts";
 ```
 
 ## When Not To Use It
