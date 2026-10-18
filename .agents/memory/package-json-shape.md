@@ -11,7 +11,7 @@ keys inside `imports` alone.
 
 ```jsonc
 {
-  "name": "@cunarist/eslint-plugin-x",
+  "name": "eslint-plugin-x",
   "version": "0.1.0",
   "description": "...",
   "keywords": ["eslint", "eslint-plugin", "eslintplugin", "oxlint"],
@@ -29,7 +29,7 @@ keys inside `imports` alone.
 }
 ```
 
-The `imports` key order can carry meaning: the modules plugin's
+The `imports` key order can carry meaning: the import-structure plugin's
 `enforce-layer-order` reads it as the layer order. Never reorder it casually;
 Oxfmt does not sort it.
 

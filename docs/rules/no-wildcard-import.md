@@ -1,8 +1,8 @@
-# @cunarist/modules/no-wildcard-import
+# import-structure/no-wildcard-import
 
 📝 Disallow namespace imports.
 
-💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-import-structure#configs-and-rules).
 
 <!-- end auto-generated rule header -->
 

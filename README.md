@@ -1,21 +1,21 @@
-# eslint-plugin-modules
+# eslint-plugin-import-structure
 
 Import-structure rules for both [ESLint](https://eslint.org) and [Oxlint](https://oxc.rs/docs/guide/usage/linter): a module graph that stays layered and free of cycles.\
-Install with `npm install --save-dev @cunarist/eslint-plugin-modules`. Requires Node.js 22.18+.
+Install with `npm install --save-dev eslint-plugin-import-structure`. Requires Node.js 22.18+.
 
 ```ts
 // Oxlint, through Vite+: vite.config.ts
-import plugin from "@cunarist/eslint-plugin-modules";
+import plugin from "eslint-plugin-import-structure";
 import { defineConfig } from "vite-plus";
 const rules = { ...plugin.configs.modules.rules };
 export default defineConfig({
-  lint: { jsPlugins: ["@cunarist/eslint-plugin-modules"], rules },
+  lint: { jsPlugins: ["eslint-plugin-import-structure"], rules },
 });
 ```
 
 ```ts
 // ESLint 9: eslint.config.ts (loading a .ts config needs jiti)
-import plugin from "@cunarist/eslint-plugin-modules";
+import plugin from "eslint-plugin-import-structure";
 import { parser } from "typescript-eslint";
 const ts = { files: ["**/*.ts"], languageOptions: { parser } };
 export default [ts, plugin.configs.modules];
@@ -67,8 +67,8 @@ The other rules (import order, duplicate sources, wildcards, absolute paths, sel
 <!-- prettier-ignore-start -->
 <!-- begin auto-generated rules list -->
 
-💼 [Configurations](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules) enabled in.\
-🧭 Set in the `modules` [configuration](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
+💼 [Configurations](https://github.com/cunarist/eslint-plugin-import-structure#configs-and-rules) enabled in.\
+🧭 Set in the `modules` [configuration](https://github.com/cunarist/eslint-plugin-import-structure#configs-and-rules).
 
 | Name                                                                   | Description                                                                  | 💼 |
 | :--------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :- |

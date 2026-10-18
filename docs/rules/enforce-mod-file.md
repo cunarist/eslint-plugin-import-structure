@@ -1,8 +1,8 @@
-# @cunarist/modules/enforce-mod-file
+# import-structure/enforce-mod-file
 
 📝 Enforce `index.ts` as the name of module entry points.
 
-💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-import-structure#configs-and-rules).
 
 <!-- end auto-generated rule header -->
 

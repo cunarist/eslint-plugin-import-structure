@@ -26,6 +26,8 @@ jobs:
         with:
           node-version: "24" # npm 11, which trusted publishing needs
           cache: false # never reuse a cache for a release build
+          # Writes an .npmrc that reads its token from NODE_AUTH_TOKEN.
+          registry-url: https://registry.npmjs.org
       - name: Check the tag matches the package version
         env:
           TAG: ${{ github.event.release.tag_name }}
@@ -37,14 +39,12 @@ jobs:
           fi
       # The build that gets published; the checks already passed in `ci`.
       - run: vp pack
-      # Only for the first release, before npm allows a trusted publisher on
-      # the package. Delete the secret once trusted publishing is set up.
-      - name: Use the bootstrap token, if one is set
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        if: env.NPM_TOKEN != ''
-        run: npm config set "//registry.npmjs.org/:_authToken" "$NPM_TOKEN"
+      # npm tries trusted publishing (OIDC) first. Until npm allows a trusted
+      # publisher on the package, which needs it to exist, the first release
+      # authenticates with the NPM_TOKEN secret. Delete the secret once trusted
+      # publishing is set up; with it unset, the token is empty and unused.
       - name: Publish
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           DIST_TAG: ${{ github.event.release.prerelease && 'next' || 'latest' }}
         run: npm publish --access public --provenance --tag "$DIST_TAG"

@@ -7,21 +7,24 @@ and follow it before reasoning or responding.
 
 ## Project
 
-- **@cunarist/eslint-plugin-modules**: import rules that keep a module
+- **eslint-plugin-import-structure**: import rules that keep a module
   graph layered and free of cycles, with the order of `package.json` `imports`
   as the layer order. One ESLint plugin that also runs under Oxlint. Namespace
-  `@cunarist/modules`, 11 rules in one config, `modules`.
+  `import-structure`, 11 rules in one config, `modules`.
 - The package's only export is the default one, the plugin. Configs live at
   `plugin.configs`: `modules` and `all` (every rule, built from the rule
   registry). No `recommended`, no named exports.
 - Runs on Node.js 22.18+; Bun is not a supported target. Built with Vite+ (`vp`):
   Oxlint, Oxfmt, type checking, Vitest, tsdown.
-- Ported from the lint plugin of `jsr:@cunarist/deno-import-check` (its
+- Ported from the lint plugin of the `deno-import-check` JSR package (its
   `./lint` entry). The published plugin mirrors exactly its 11 rules, nothing
   added or removed. Its CLI was not ported.
-- Renamed from `@cunarist/eslint-plugin-import-check` (namespace
-  `@cunarist/import-check`, config `import-check`) on 2026-10-17. Rule names
-  did not change.
+- Renamed twice; rule names never changed. On 2026-10-17 the scoped
+  import-check package (config `import-check`) became the scoped modules
+  package (config `modules`). On 2026-10-18 it became the unscoped
+  `eslint-plugin-import-structure` (namespace `import-structure`), and the
+  repo moved to `cunarist/eslint-plugin-import-structure`. The `modules`
+  config kept its name.
 
 ## Rules
 

@@ -17,7 +17,7 @@ Oxlint plugin with `meta.name` `"project"`, loaded through `jsPlugins` in
 
 `scripts/` is flat: no subfolders and no `index.ts`. `max-lines` (300)
 applies, so rules live in themed sibling files sharing the prefix and
-`scripts/project-lint.ts` imports them by relative path. In eslint-plugin-modules:
+`scripts/project-lint.ts` imports them by relative path. In eslint-plugin-import-structure:
 `project-lint.ts` (plugin and rule list), `project-lint-source.ts`
 (`prefer-ascii` with its `allowFiles` option, and `no-disable-comments`), `project-lint-modules.ts` (`no-asset-imports`), and
 `project-lint-types.ts` (shared rule types). Don't add `scripts/rules/`.

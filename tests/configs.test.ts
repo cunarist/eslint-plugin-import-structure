@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import plugin from "#plugin";
 
-const NAMESPACE = "@cunarist/modules";
+const NAMESPACE = "import-structure";
 
 /**
  * The rules this plugin was ported with, and nothing else. A repo-only

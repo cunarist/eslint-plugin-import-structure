@@ -1,8 +1,8 @@
-# @cunarist/modules/no-self-import
+# import-structure/no-self-import
 
 📝 Disallow a module from importing itself.
 
-💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-modules#configs-and-rules).
+💼 This rule is enabled in the 🧭 `modules` [config](https://github.com/cunarist/eslint-plugin-import-structure#configs-and-rules).
 
 <!-- end auto-generated rule header -->
 

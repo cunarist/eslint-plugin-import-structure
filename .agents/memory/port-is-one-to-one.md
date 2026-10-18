@@ -1,8 +1,8 @@
 ---
-description: The plugin holds exactly the 11 lint rules of jsr:@cunarist/deno-import-check/lint, same names; the CLI was not ported
+description: The plugin holds exactly the 11 lint rules of the `./lint` entry of the `deno-import-check` JSR package, same names; the CLI was not ported
 ---
 
-Ported from `jsr:@cunarist/deno-import-check` 0.9.0, its `./lint` entry
+Ported from the `deno-import-check` JSR package 0.9.0, its `./lint` entry
 (`src/lint.ts`) only. The published plugin holds exactly its 11 rules under the
 same names, nothing added or removed; `tests/configs.test.ts` pins the list.
 Anything that cannot be 1:1 is flagged to the user, not decided

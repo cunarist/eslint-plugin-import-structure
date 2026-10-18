@@ -1,10 +1,10 @@
 /**
- * `@cunarist/eslint-plugin-modules` - import rules that keep a module
+ * `eslint-plugin-import-structure` - import rules that keep a module
  * graph free of cycles and clearly layered, with the order of the
  * `package.json` `imports` field as the layer order.
  *
- * One plugin, namespace `@cunarist/modules`, so a rule id reads
- * `@cunarist/modules/enforce-layer-order`. Its configs are
+ * One plugin, namespace `import-structure`, so a rule id reads
+ * `import-structure/enforce-layer-order`. Its configs are
  * `modules`, the rules it was ported with, and `all`, which turns on
  * every rule. The plugin is the only export; its configs
  * are at `plugin.configs`.
@@ -19,7 +19,7 @@ import type { ConfigObject, Plugin } from "@eslint/core";
 import { rules } from "#rules";
 
 /** The prefix of every rule id, as ESLint derives it from the package name. */
-const NAMESPACE = "@cunarist/modules";
+const NAMESPACE = "import-structure";
 
 /**
  * The `modules` preset - every rule the plugin was ported with.
@@ -61,7 +61,7 @@ const basePlugin: Plugin = {
     // Written out rather than imported from `package.json`, so the source has
     // only `.ts` imports. A release bumps both; `tests/package-meta.test.ts`
     // fails if they drift apart.
-    name: "@cunarist/eslint-plugin-modules",
+    name: "eslint-plugin-import-structure",
     version: "0.10.0",
     namespace: NAMESPACE,
   },

@@ -8,7 +8,7 @@ turn on whole categories, then list only what parity or a real need adds.
 ```ts
 lint: {
   plugins: ["typescript", "unicorn", "oxc", "import"],
-  jsPlugins: ["@cunarist/eslint-plugin-explicit-types", "./scripts/project-lint.ts"],
+  jsPlugins: ["eslint-plugin-explicit-types", "./scripts/project-lint.ts"],
   categories: { correctness: "error", suspicious: "error", pedantic: "error", perf: "error" },
   rules: { ...explicitTypes.configs.concrete.rules, ...projectLint.configs.project.rules },
   ignorePatterns: ["src/generated/**"], // generated files only, see below
@@ -40,7 +40,7 @@ lint: {
   Hand-written code is never ignored.
 - **No lint disable comments**: [[lint-no-disable-comments]].
 - **Parity:** [[lint-parity-never-shrinks]]. **Naming:** [[naming-id-match]].
-- Don't add a second import sorter; the modules plugin's `enforce-import-order` is
+- Don't add a second import sorter; the import-structure plugin's `enforce-import-order` is
   the only one, and Oxfmt's `sortImports` stays off.
 
 `perf` came last: in the template it flagged nine `.includes` on constant
