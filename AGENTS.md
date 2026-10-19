@@ -95,6 +95,11 @@ and follow it before reasoning or responding.
   (`complexity`), hugoalh's defaults from the old Deno config.
 - The repo lints itself with its own rules. Lint disable and enable comments
   (`eslint-*` or `oxlint-*`, any form) fail `vp check`; fix the source.
+- Lint policy is a blacklist: every Oxlint category but `nursery` (correctness,
+  suspicious, pedantic, perf, style, restriction) is on at `error`.
+  `scripts/project-lint.ts` holds only the repo-only rules, the rules turned
+  off (each with a one-line reason: a collision, too much churn, or Node code),
+  and option tweaks; never re-list a rule a category already turns on.
 - `vite.config.ts` lists no rule by name: its `rules` spreads
   `configs.all.rules` from `src/plugin/index.ts` and `configs.project.rules` from
   `scripts/project-lint.ts`. Only `overrides`, being file globs, stays there.

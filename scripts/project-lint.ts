@@ -38,73 +38,17 @@ import { noDisableCommentsRule, preferAsciiRule } from "./project-lint-source.ts
 
 /**
  * This repository's own rule list, spread by `vite.config.ts` after the
- * published `all` config: rules beyond the Oxlint categories, plus a
- * few extras and opt-outs. Built-in Oxlint rule ids sit here too, so
- * `vite.config.ts` lists no rule by name.
+ * published `all` config. Every Oxlint category but `nursery` is on, so
+ * this list holds only the repo-only rules, the rules turned off (each
+ * with its reason), and option tweaks.
  */
 const rules: DummyRuleMap = {
-  // Rules beyond the categories in `vite.config.ts`. First, naming: no
-  // `_` inside the name once leading and trailing ones are trimmed,
-  // unless it has no lowercase ASCII letter (UPPER_SNAKE). Shorthand
-  // destructuring binds a key the code does not own, and property names
-  // are not declarations.
-  "id-match": [
-    "error",
-    "^_*[^_]*_*$|^[^a-z]*$",
-    {
-      properties: false,
-      classFields: false,
-      onlyDeclarations: false,
-      ignoreDestructuring: true,
-    },
-  ],
-  curly: "error",
-  "guard-for-in": "error",
-  "no-console": "error",
-  "no-empty": "error",
-  "no-regex-spaces": "error",
-  "no-restricted-globals": ["error", "window"],
-  "no-var": "error",
-  "prefer-const": "error",
-  "import/no-cycle": "error",
-  "import/no-relative-parent-imports": "error",
-  "typescript/adjacent-overload-signatures": "error",
-  "typescript/consistent-type-imports": "error",
-  "typescript/no-empty-interface": "error",
-  "typescript/no-explicit-any": "error",
-  "typescript/no-namespace": "error",
-  "typescript/no-non-null-assertion": "error",
+  // Repo-only rules.
   "project/no-disable-comments": "error",
   "project/no-asset-imports": "error",
   // Deno's `prefer-ascii`, which also covers hugoalh's
   // `prefer-ascii-identifier`.
   "project/prefer-ascii": "error",
-  "unicorn/no-abusive-eslint-disable": "error",
-  // The hugoalh `recommended` set that deno-import-check's `deno.json`
-  // loaded, mapped to the built-ins outside the categories above (the rest
-  // are in them). It left `max-params` and `max-complexity` at their
-  // defaults: 4 parameters and a complexity of 32.
-  "max-params": ["error", { max: 4 }],
-  complexity: ["error", { max: 32 }],
-  "no-lone-blocks": "error",
-  "import/first": "error",
-  "typescript/consistent-type-definitions": ["error", "interface"],
-  "typescript/consistent-type-assertions": ["error", { assertionStyle: "as" }],
-  "typescript/explicit-member-accessibility": ["error", { accessibility: "no-public" }],
-  "unicorn/prefer-module": "error",
-  // hugoalh's `no-import-absolute`, `no-import-data`, `no-import-file`,
-  // `no-import-http`, `no-import-jsr` (by URL), and `std-on-jsr`.
-  "no-restricted-imports": [
-    "error",
-    {
-      patterns: [
-        {
-          regex: "^(?:/|data:|file:|http:|https://jsr\\.io/|https://deno\\.land/std)",
-          message: "Import packages by name and local files by a relative or `#` path.",
-        },
-      ],
-    },
-  ],
   // Ports of the hugoalh `recommended` rules with no Oxlint built-in, under
   // their hugoalh names.
   "project/no-duplicate-awaits": "error",
@@ -119,11 +63,115 @@ const rules: DummyRuleMap = {
   "project/no-unsafe-number": "error",
   "project/no-useless-continue": "error",
   "project/no-useless-type": "error",
-  // Pedantic rules that fight the AST types: nodes are mutable, and `type`
-  // is an enum imported only as a type.
-  "typescript/prefer-readonly-parameter-types": "off",
-  "typescript/no-unsafe-enum-comparison": "off",
+
+  // Option tweaks. Naming: no `_` inside the name once leading and
+  // trailing ones are trimmed, unless it has no lowercase ASCII letter
+  // (UPPER_SNAKE). Shorthand destructuring binds a key the code does not
+  // own, and property names are not declarations.
+  "id-match": [
+    "error",
+    "^_*[^_]*_*$|^[^a-z]*$",
+    {
+      properties: false,
+      classFields: false,
+      onlyDeclarations: false,
+      ignoreDestructuring: true,
+    },
+  ],
+  // Single capital letters stay allowed as type parameters (`T`).
+  "id-length": ["error", { exceptionPatterns: ["^[A-Z]$"] }],
+  "no-restricted-globals": ["error", "window"],
+  // hugoalh's `no-import-absolute`, `no-import-data`, `no-import-file`,
+  // `no-import-http`, `no-import-jsr` (by URL), and `std-on-jsr`.
+  "no-restricted-imports": [
+    "error",
+    {
+      patterns: [
+        {
+          regex: "^(?:/|data:|file:|http:|https://jsr\\.io/|https://deno\\.land/std)",
+          message: "Import packages by name and local files by a relative or `#` path.",
+        },
+      ],
+    },
+  ],
+  // The hugoalh `recommended` limits: 4 parameters and a complexity of 32.
+  "max-params": ["error", { max: 4 }],
+  complexity: ["error", { max: 32 }],
   "typescript/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
+  "one-var": ["error", "never"],
+  "no-use-before-define": ["error", { functions: false }],
+  "func-style": ["error", "declaration", { allowArrowFunctions: true }],
+
+  // The smallest limit the current code passes.
+  "max-statements": ["error", { max: 23 }],
+  // `isolatedDeclarations` needs the type on the declaration, not the `new`.
+  "typescript/consistent-generic-constructors": ["error", "type-annotation"],
+
+  // Off: collides with the AST types (`type` is an enum imported only as a type).
+  "typescript/no-unsafe-enum-comparison": "off",
+  // Off: collides with `project/no-modifier-private` (members carry no modifier).
+  "typescript/explicit-member-accessibility": "off",
+  // Off: collides with `project/no-modifier-private` (it targets private members).
+  "typescript/prefer-readonly": "off",
+  // Off: collides with the mutable AST node types every rule takes.
+  "typescript/prefer-readonly-parameter-types": "off",
+  // Off: collides with interface index signatures (`consistent-type-definitions`).
+  "typescript/consistent-indexed-object-style": "off",
+  // Off: collides with `isolatedDeclarations` and the explicit `const` annotations.
+  "typescript/no-inferrable-types": "off",
+  // Off: collides with `import-structure/enforce-import-order`.
+  "sort-imports": "off",
+  // Off: collides with the `index.ts` entry files the `#` aliases target.
+  "oxc/no-barrel-file": "off",
+  // Off: collides with each export sitting on its own declaration.
+  "import/group-exports": "off",
+  // Off: collides with each export sitting on its own declaration.
+  "import/exports-last": "off",
+  // Off: collides with the one named `...Rule` export per rule file.
+  "import/prefer-default-export": "off",
+  // Off: collides with the named exports every module uses.
+  "import/no-named-export": "off",
+  // Off: collides with the default export ESLint plugins and `vite.config.ts` need.
+  "import/no-default-export": "off",
+  // Off: collides with the `import type` fixes of `typescript/consistent-type-imports`.
+  "import/consistent-type-specifier-style": "off",
+  // Off: collides with `unicorn/prefer-ternary`.
+  "no-ternary": "off",
+  // Off: collides with the ES2024 target and `typescript/prefer-optional-chain`.
+  "oxc/no-async-await": "off",
+  // Off: collides with the ES2024 target and `typescript/prefer-optional-chain`.
+  "oxc/no-optional-chaining": "off",
+  // Off: collides with bit flags where an API uses them.
+  "no-bitwise": "off",
+  // Off: collides with `undefined` as the absent value instead of `null`.
+  "no-undefined": "off",
+  // Off: collides with `typescript/no-floating-promises` (`void` marks ignored ones).
+  "no-void": "off",
+  // Off: collides with the AST and JSON APIs that return `null`.
+  "unicorn/no-null": "off",
+  // Off: collides with Oxfmt, which lowercases hex digits back.
+  "unicorn/number-literal-case": "off",
+  // Off: collides with `strictFunctionTypes`: `OxlintRunner` relies on method
+  // bivariance to bridge the two hosts' rule types.
+  "typescript/method-signature-style": "off",
+
+  // Off: too much churn.
+  "no-magic-numbers": "off",
+  "sort-keys": "off",
+  "capitalized-comments": "off",
+  "typescript/explicit-function-return-type": "off",
+  "typescript/explicit-module-boundary-types": "off",
+  "no-empty-function": "off",
+  "class-methods-use-this": "off",
+  "unicorn/switch-case-braces": "off",
+  "prefer-destructuring": "off",
+  "oxc/no-rest-spread-properties": "off",
+  "unicorn/numeric-separators-style": "off",
+  "no-continue": "off",
+
+  // Off: Node code. The plugin runs inside ESLint and Oxlint on Node.js.
+  "import/no-nodejs-modules": "off",
+  "unicorn/no-process-exit": "off",
 };
 
 /**

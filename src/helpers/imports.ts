@@ -85,7 +85,7 @@ interface CachedConfig {
  * Parsed configs keyed by file path. An entry is reused only while the file's
  * modification time is unchanged, so an editor session sees edits.
  */
-const configCache = new Map<string, CachedConfig>();
+const configCache: Map<string, CachedConfig> = new Map();
 
 /** The modification time of a file, or `null` when it does not exist. */
 function modifiedAt(path: string): number | null {
@@ -210,8 +210,8 @@ function readConfig(configPath: string, configDir: string): ImportsConfig | null
   }
 
   const entries: ModuleEntry[] = [];
-  const byTarget = new Map<string, ModuleEntry>();
-  const bySpecifier = new Map<string, ModuleEntry>();
+  const byTarget: Map<string, ModuleEntry> = new Map();
+  const bySpecifier: Map<string, ModuleEntry> = new Map();
   const patterns: PatternEntry[] = [];
 
   for (const [specifier, value] of Object.entries(imports)) {
@@ -238,7 +238,7 @@ function readConfig(configPath: string, configDir: string): ImportsConfig | null
     return null;
   }
 
-  patterns.sort((a, b) => b.prefix.length - a.prefix.length);
+  patterns.sort((left, right) => right.prefix.length - left.prefix.length);
 
   return { configDir, entries, byTarget, bySpecifier, patterns };
 }
