@@ -123,8 +123,6 @@ const rules: DummyRuleMap = {
   "sort-imports": "off",
   // Off: collides with the `index.ts` entry files the `#` aliases target.
   "oxc/no-barrel-file": "off",
-  // Twelve: the most any file needs, the rule registry `src/rules/index.ts`.
-  "import/max-dependencies": ["error", { max: 12 }],
   // Off: collides with each export sitting on its own declaration.
   "import/group-exports": "off",
   // Off: collides with each export sitting on its own declaration.
@@ -195,6 +193,8 @@ const nodeRules: DummyRuleMap = {
  */
 export const projectOverrides: OxlintOverride[] = [
   { files: ["vite.config.ts", "scripts/**"], rules: nodeRules },
+  // The rule registry imports every rule file by design.
+  { files: ["src/rules/index.ts"], rules: { "import/max-dependencies": "off" } },
 ];
 
 /**
