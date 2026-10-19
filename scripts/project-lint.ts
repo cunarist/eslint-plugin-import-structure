@@ -153,6 +153,8 @@ const rules: DummyRuleMap = {
 
   // Off: TypeScript's type checking already proves switches exhaustive.
   "typescript/switch-exhaustiveness-check": "off",
+  // Off: TypeScript checks completeness; a forced `default:` hides missing cases.
+  "default-case": "off",
   // Off: not type-aware; `noImplicitReturns` covers missing returns.
   "consistent-return": "off",
   // Off: sequential awaits in loops are intentional; workarounds cost more.

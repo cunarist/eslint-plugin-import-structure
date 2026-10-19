@@ -50,7 +50,8 @@ export const projectOverrides: OxlintOverride[] = [
   `typescript/switch-exhaustiveness-check` (TypeScript proves switches
   exhaustive; no `considerDefaultExhaustiveForUnions` anywhere),
   `consistent-return` (not type-aware; `noImplicitReturns` covers it), and
-  `no-await-in-loop` (sequential awaits are intentional).
+  `no-await-in-loop` (sequential awaits are intentional), and `default-case`
+  (TypeScript checks completeness; a forced `default:` hides missing cases).
 - **On through the categories** (never re-listed): `typescript/promise-function-async`
   with `require-await` and `return-await` (pattern
   `async f() { const x = await g(); return x; }`), `init-declarations`

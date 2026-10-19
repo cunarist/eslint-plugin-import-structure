@@ -28,57 +28,38 @@ type LoopStatement =
   | TSESTree.WhileStatement;
 
 /**
- * A rule that reports an operator applied twice in a row, such as
- * `await await x`. When `safeFix` is set, dropping the outer keyword gives
- * the same value, so the rule fixes it; otherwise it only reports.
- */
-function doubledOperatorRule(
-  keyword: "await" | "typeof" | "void",
-  effect: string,
-  safeFix: boolean,
-): ProjectRule {
-  return {
-    meta: {
-      type: "problem",
-      docs: { description: `Disallow \`${keyword}\` applied twice in a row` },
-      ...(safeFix ? { fixable: "code" as const } : {}),
-      schema: [],
-      messages: { doubled: `Multiple \`${keyword}\`s ${effect}, possibly not intended.` },
-    },
-    create(context) {
-      function check(node: TSESTree.AwaitExpression | TSESTree.UnaryExpression): void {
-        const inner = node.argument;
-        const doubled =
-          keyword === "await"
-            ? inner.type === "AwaitExpression"
-            : inner.type === "UnaryExpression" && inner.operator === keyword;
-        if (!doubled || (node.type === "UnaryExpression" && node.operator !== keyword)) {
-          return;
-        }
-        const range: [number, number] = [node.range[0], node.range[0] + keyword.length];
-        context.report({
-          loc: {
-            start: context.sourceCode.getLocFromIndex(range[0]),
-            end: context.sourceCode.getLocFromIndex(range[1]),
-          },
-          messageId: "doubled",
-          ...(safeFix ? { fix: (fixer): RuleTextEdit => fixer.removeRange(range) } : {}),
-        });
-      }
-      return keyword === "await" ? { AwaitExpression: check } : { UnaryExpression: check };
-    },
-  };
-}
-
-/**
  * `no-duplicate-typeofs` - `typeof typeof x` is always `"string"`. Not
  * fixed, since dropping one `typeof` changes the value.
  */
-export const noDuplicateTypeofsRule: ProjectRule = doubledOperatorRule(
-  "typeof",
-  'always return `"string"`',
-  false,
-);
+export const noDuplicateTypeofsRule: ProjectRule = {
+  meta: {
+    type: "problem",
+    docs: { description: "Disallow `typeof` applied twice in a row" },
+    schema: [],
+    messages: { doubled: 'Multiple `typeof`s always return `"string"`, possibly not intended.' },
+  },
+  create(context) {
+    return {
+      UnaryExpression(node: TSESTree.UnaryExpression): void {
+        const inner = node.argument;
+        if (
+          node.operator !== "typeof" ||
+          inner.type !== "UnaryExpression" ||
+          inner.operator !== "typeof"
+        ) {
+          return;
+        }
+        context.report({
+          loc: {
+            start: context.sourceCode.getLocFromIndex(node.range[0]),
+            end: context.sourceCode.getLocFromIndex(node.range[0] + "typeof".length),
+          },
+          messageId: "doubled",
+        });
+      },
+    };
+  },
+};
 
 /** `no-empty-yield` - a `yield` with no expression, likely missing one. */
 export const noEmptyYieldRule: ProjectRule = {
