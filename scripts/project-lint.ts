@@ -176,7 +176,7 @@ const rules: DummyRuleMap = {
   "unicorn/no-process-exit": "off",
 };
 
-/** Node code (`vite.config.ts` and `scripts/`), spread into `overrides`. */
+/** Node code (`vite.config.ts` and `scripts/`): the first override. */
 const nodeRules: DummyRuleMap = {
   // Vite and the Oxlint plugin host read a default export.
   "import/no-default-export": "off",
@@ -189,16 +189,17 @@ const nodeRules: DummyRuleMap = {
 };
 
 /**
- * The files some rules above treat differently, one entry per exemption with
- * its reason, spread by `vite.config.ts` into its overrides after the Node
- * one. No file is exempted yet.
+ * The whole `overrides` array `vite.config.ts` uses: the Node code entry
+ * first, then one entry per file exception, each with its reason. A later
+ * entry wins over an earlier one and over `rules`.
  */
-export const projectOverrides: OxlintOverride[] = [];
+export const projectOverrides: OxlintOverride[] = [
+  { files: ["vite.config.ts", "scripts/**"], rules: nodeRules },
+];
 
 /**
  * The repo-local plugin, namespace `project`: its own rules, enabled as
- * `project/<rule>`, `configs.project`, the rule list above, and
- * `configs.node`, the Node code override.
+ * `project/<rule>`, and `configs.project`, the rule list above.
  */
 const plugin = {
   meta: { name: "project" },
@@ -219,7 +220,7 @@ const plugin = {
     "no-useless-continue": noUselessContinueRule,
     "no-useless-type": noUselessTypeRule,
   },
-  configs: { project: { rules }, node: { rules: nodeRules } },
+  configs: { project: { rules } },
 };
 
 export default plugin;

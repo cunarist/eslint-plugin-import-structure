@@ -102,7 +102,10 @@ and follow it before reasoning or responding.
   and option tweaks; never re-list a rule a category already turns on.
 - `vite.config.ts` lists no rule by name: its `rules` spreads
   `configs.all.rules` from `src/plugin/index.ts` and `configs.project.rules` from
-  `scripts/project-lint.ts`. Only `overrides`, being file globs, stays there.
+  `scripts/project-lint.ts`, and its `overrides` is exactly `projectOverrides`
+  from `scripts/project-lint.ts` (the Node code entry first, then per-file
+  exceptions with a why-comment). No `allowFiles` options; `ignorePatterns`
+  only for generated output. See `.agents/memory/lint-config.md`.
 - Every rule has a `docs/rules/<rule>.md` in the ESLint core layout: Rule
   Details, incorrect/correct examples, and When Not To Use It. `npm run docs`
   regenerates the headers and the README rules list after `vp pack`.
@@ -117,8 +120,7 @@ and follow it before reasoning or responding.
   file rather than turning the rule off. Every function likewise stays under
   `max-lines-per-function`'s default of 50, rule `create` functions and
   visitors included; split one into named helpers that take the context,
-  source, and plain data as arguments. The only `overrides` entry is the
-  rule registry's `import/max-dependencies`.
+  source, and plain data as arguments.
 - Only CI publishes, from a published GitHub release `vX.Y.Z` that matches
   `package.json`. Use the `release` skill and ask the user first.
 - Release notes live only on GitHub releases. There is no `CHANGELOG.md`; never

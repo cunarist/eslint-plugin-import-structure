@@ -56,5 +56,5 @@ export default plugin;
   and every repo should look the same.
 
 `scripts/` is tooling, not production code: never packed or published, and
-no tests. Narrow `overrides` for `scripts/**` are allowed when a script truly
-needs one (e.g. `no-console`); see [[lint-overrides-policy]].
+no tests. Its lint exceptions are entries in `projectOverrides`, e.g. the
+Node code entry turning `no-console` off; see [[lint-config]].
