@@ -97,7 +97,6 @@ const rules: DummyRuleMap = {
   // The hugoalh `recommended` limits: 4 parameters and a complexity of 32.
   "max-params": ["error", { max: 4 }],
   complexity: ["error", { max: 32 }],
-  "typescript/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
   "one-var": ["error", "never"],
   "no-use-before-define": ["error", { functions: false }],
   "func-style": ["error", "declaration", { allowArrowFunctions: true }],
@@ -154,6 +153,13 @@ const rules: DummyRuleMap = {
   // Off: collides with `strictFunctionTypes`: `OxlintRunner` relies on method
   // bivariance to bridge the two hosts' rule types.
   "typescript/method-signature-style": "off",
+
+  // Off: TypeScript's type checking already proves switches exhaustive.
+  "typescript/switch-exhaustiveness-check": "off",
+  // Off: not type-aware; `noImplicitReturns` covers missing returns.
+  "consistent-return": "off",
+  // Off: sequential awaits in loops are intentional; workarounds cost more.
+  "no-await-in-loop": "off",
 
   // Off: too much churn.
   "no-magic-numbers": "off",
