@@ -44,6 +44,29 @@ export const projectOverrides: OxlintOverride[] = [
 ];
 ```
 
+## Rule decisions (user, 2026-10-19, all repos)
+
+- **Off**, each with its reason in `scripts/project-lint.ts`:
+  `typescript/switch-exhaustiveness-check` (TypeScript proves switches
+  exhaustive; no `considerDefaultExhaustiveForUnions` anywhere),
+  `consistent-return` (not type-aware; `noImplicitReturns` covers it), and
+  `no-await-in-loop` (sequential awaits are intentional).
+- **On through the categories** (never re-listed): `typescript/promise-function-async`
+  with `require-await` and `return-await` (pattern
+  `async f() { const x = await g(); return x; }`), `init-declarations`
+  (`let x: T | null = null`), `unicorn/no-array-for-each` (use `for...of`),
+  `unicorn/no-array-reduce` (use loops), `unicorn/prefer-structured-clone`,
+  `typescript/prefer-nullish-coalescing` with defaults, `no-explicit-any` and
+  the `no-unsafe-*` rules (`unknown` is allowed; untrusted data is `unknown`
+  plus a type guard).
+- **Options:** `no-use-before-define` only `{ functions: false }`; move
+  constants and classes above their first use.
+- `import/max-dependencies` uses Oxlint's default limit; only the rule
+  registry is exempt, through `projectOverrides`.
+- `project/no-nan` stays on: absent numbers are `null`, never a `NaN` sentinel.
+- Behavior may change in a fix only if it is more modern, cleaner, and not
+  more dangerous.
+
 Prefer fixing the code (split files, extract helpers, barrels) over a new
 off or override. Parity: [[lint-parity-never-shrinks]]. Naming:
 [[naming-id-match]].
