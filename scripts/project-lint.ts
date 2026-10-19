@@ -24,11 +24,8 @@ import {
   noUselessTypeRule,
 } from "./project-lint-hugoalh-types.ts";
 import {
-  noDuplicateAwaitsRule,
   noDuplicateTypeofsRule,
-  noDuplicateVoidsRule,
   noEmptyYieldRule,
-  noEnumRule,
   noNanRule,
   noUnsafeNumberRule,
   noUselessContinueRule,
@@ -51,18 +48,18 @@ const rules: DummyRuleMap = {
   "project/prefer-ascii": "error",
   // Ports of the hugoalh `recommended` rules with no Oxlint built-in, under
   // their hugoalh names.
-  "project/no-duplicate-awaits": "error",
   "project/no-duplicate-interfaces": "error",
   "project/no-duplicate-typeofs": "error",
   "project/no-duplicate-types": "error",
-  "project/no-duplicate-voids": "error",
   "project/no-empty-yield": "error",
-  "project/no-enum": "error",
   "project/no-modifier-private": "error",
   "project/no-nan": "error",
   "project/no-unsafe-number": "error",
   "project/no-useless-continue": "error",
   "project/no-useless-type": "error",
+  // hugoalh's `no-enum`, from explicit-types alone: its other rules target
+  // app code, not this plugin's AST-typed sources.
+  "explicit-types/no-enum": "error",
 
   // Option tweaks. Naming: no `_` inside the name once leading and
   // trailing ones are trimmed, unless it has no lowercase ASCII letter
@@ -213,13 +210,10 @@ const plugin = {
     "no-disable-comments": noDisableCommentsRule,
     "no-asset-imports": noAssetImportsRule,
     "prefer-ascii": preferAsciiRule,
-    "no-duplicate-awaits": noDuplicateAwaitsRule,
     "no-duplicate-interfaces": noDuplicateInterfacesRule,
     "no-duplicate-typeofs": noDuplicateTypeofsRule,
     "no-duplicate-types": noDuplicateTypesRule,
-    "no-duplicate-voids": noDuplicateVoidsRule,
     "no-empty-yield": noEmptyYieldRule,
-    "no-enum": noEnumRule,
     "no-modifier-private": noModifierPrivateRule,
     "no-nan": noNanRule,
     "no-unsafe-number": noUnsafeNumberRule,

@@ -9,7 +9,11 @@ export default defineConfig({
     plugins: ["typescript", "unicorn", "oxc", "import"],
     // Lints itself from source; `scripts/project-lint.ts` holds the repo's own
     // rule list and repo-only rules, never published.
-    jsPlugins: ["./src/plugin/index.ts", "./scripts/project-lint.ts"],
+    jsPlugins: [
+      "./src/plugin/index.ts",
+      "eslint-plugin-explicit-types",
+      "./scripts/project-lint.ts",
+    ],
     categories: {
       correctness: "error",
       suspicious: "error",

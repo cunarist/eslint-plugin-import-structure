@@ -2,9 +2,11 @@
  * The `project` plugin's ports of `@hugoalh/deno-lint-rules` 0.8.3
  * `recommended` rules that read single expressions and statements, which
  * the old Deno config loaded and Oxlint has no built-in for:
- * `no-duplicate-awaits`, `no-duplicate-typeofs`, `no-duplicate-voids`,
- * `no-empty-yield`, `no-enum`, `no-nan`, `no-unsafe-number`, and
- * `no-useless-continue`. Each keeps its original name and behavior.
+ * `no-duplicate-typeofs`, `no-empty-yield`, `no-nan`, `no-unsafe-number`,
+ * and `no-useless-continue`. Each keeps its original name and behavior.
+ * `no-duplicate-awaits` and `no-duplicate-voids` are covered by
+ * `unicorn/no-unnecessary-await` and `typescript/no-meaningless-void-operator`,
+ * and `no-enum` by `explicit-types/no-enum`.
  *
  * @module
  */
@@ -68,13 +70,6 @@ function doubledOperatorRule(
   };
 }
 
-/** `no-duplicate-awaits` - `await await x` awaits once, the same as `await x`. */
-export const noDuplicateAwaitsRule: ProjectRule = doubledOperatorRule(
-  "await",
-  "have the same effect as a single `await`",
-  true,
-);
-
 /**
  * `no-duplicate-typeofs` - `typeof typeof x` is always `"string"`. Not
  * fixed, since dropping one `typeof` changes the value.
@@ -83,13 +78,6 @@ export const noDuplicateTypeofsRule: ProjectRule = doubledOperatorRule(
   "typeof",
   'always return `"string"`',
   false,
-);
-
-/** `no-duplicate-voids` - `void void x` is the same as `void x`. */
-export const noDuplicateVoidsRule: ProjectRule = doubledOperatorRule(
-  "void",
-  "have the same effect as a single `void`",
-  true,
 );
 
 /** `no-empty-yield` - a `yield` with no expression, likely missing one. */
@@ -106,23 +94,6 @@ export const noEmptyYieldRule: ProjectRule = {
         if (node.argument === null) {
           context.report({ node, messageId: "empty" });
         }
-      },
-    };
-  },
-};
-
-/** `no-enum` - `enum` is not type safe; use a union of literals. */
-export const noEnumRule: ProjectRule = {
-  meta: {
-    type: "suggestion",
-    docs: { description: "Disallow `enum`" },
-    schema: [],
-    messages: { enum: "`enum` is not type safe, so it is not allowed." },
-  },
-  create(context) {
-    return {
-      TSEnumDeclaration(node: TSESTree.TSEnumDeclaration): void {
-        context.report({ node, messageId: "enum" });
       },
     };
   },
