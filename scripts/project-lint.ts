@@ -15,7 +15,7 @@
  * @module
  */
 
-import type { DummyRuleMap } from "vite-plus/lint";
+import type { DummyRuleMap, OxlintOverride } from "vite-plus/lint";
 
 import {
   noDuplicateInterfacesRule,
@@ -187,6 +187,13 @@ const nodeRules: DummyRuleMap = {
   // Node code: a CLI reports to the console.
   "no-console": "off",
 };
+
+/**
+ * The files some rules above treat differently, one entry per exemption with
+ * its reason, spread by `vite.config.ts` into its overrides after the Node
+ * one. No file is exempted yet.
+ */
+export const projectOverrides: OxlintOverride[] = [];
 
 /**
  * The repo-local plugin, namespace `project`: its own rules, enabled as

@@ -15,7 +15,9 @@ with no options (excluding `hugoalh/no-duplicate-imports` and
 
 - `no-external-import`: skipped.
 - `prefer-ascii`: `project/prefer-ascii` in `scripts/project-lint-source.ts`,
-  copied from temeddix/eximium (node-migration) with its `allowFiles` option.
+  copied from temeddix/eximium (node-migration). Rules take no `allowFiles`
+  option; a file exemption is a `projectOverrides` entry in
+  `scripts/project-lint.ts` with a why-comment.
   It also covers hugoalh's `prefer-ascii-identifier`.
 - `max-params` 4 and `complexity` 32 with Oxlint's built-ins. These are
   hugoalh's defaults; that `recommended` entry did not actually turn them on.

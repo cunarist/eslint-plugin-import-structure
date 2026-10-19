@@ -7,7 +7,7 @@
 
 import type { TSESTree } from "@typescript-eslint/types";
 
-import type { AllowFilesOptions, FileExemptRule, ProjectRule } from "./project-lint-types.ts";
+import type { ProjectRule } from "./project-lint-types.ts";
 
 /** The highest code point `prefer-ascii` lets through. */
 const MAX_ASCII_CODE_POINT: number = 0x7f;
@@ -49,41 +49,21 @@ export const noDisableCommentsRule: ProjectRule = {
   },
 };
 
-/** Turns a path into forward slashes with no leading slash before a drive. */
-function normalizePath(path: string): string {
-  return path.replaceAll("\\", "/").replace(/^\/(?<drive>[A-Za-z]:\/)/u, "$<drive>");
-}
-
-/** Whether a file is one the options exempt, matched by path suffix. */
-function isAllowedFile(filename: string, options: AllowFilesOptions | null): boolean {
-  const path: string = normalizePath(filename);
-  return options !== null && options.allowFiles.some((file: string) => path.endsWith(`/${file}`));
-}
-
 /**
  * `prefer-ascii` - every character of the source is ASCII, as Deno's
- * `prefer-ascii` required. The files in `allowFiles` are skipped, matched by
- * path suffix; this repo names none.
+ * `prefer-ascii` required. A file is exempted only through an entry in
+ * `projectOverrides` in `project-lint.ts`; this repo has none.
  */
-export const preferAsciiRule: FileExemptRule = {
+export const preferAsciiRule: ProjectRule = {
   meta: {
     type: "suggestion",
-    docs: { description: "Require the source to be ASCII outside the allowed files" },
-    schema: [
-      {
-        type: "object",
-        properties: { allowFiles: { type: "array", items: { type: "string" } } },
-        additionalProperties: false,
-      },
-    ],
+    docs: { description: "Require the source to be ASCII" },
+    schema: [],
     messages: {
       nonAscii: "Non-ASCII character '{{character}}' (U+{{codePoint}}) is not allowed.",
     },
   },
   create(context) {
-    if (isAllowedFile(context.filename, context.options[0] ?? null)) {
-      return {};
-    }
     return {
       Program(_node: TSESTree.Program): void {
         const { sourceCode } = context;

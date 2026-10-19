@@ -2,7 +2,7 @@ import { defineConfig } from "vite-plus";
 
 import importStructure from "#plugin";
 
-import projectLint from "./scripts/project-lint.ts";
+import projectLint, { projectOverrides } from "./scripts/project-lint.ts";
 
 export default defineConfig({
   lint: {
@@ -19,7 +19,10 @@ export default defineConfig({
       restriction: "error",
     },
     rules: { ...importStructure.configs.all.rules, ...projectLint.configs.project.rules },
-    overrides: [{ files: ["vite.config.ts", "scripts/**"], rules: projectLint.configs.node.rules }],
+    overrides: [
+      { files: ["vite.config.ts", "scripts/**"], rules: projectLint.configs.node.rules },
+      ...projectOverrides,
+    ],
     options: {
       typeAware: true,
       typeCheck: true,
