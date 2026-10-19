@@ -15,7 +15,9 @@ with no options (excluding `hugoalh/no-duplicate-imports` and
 
 - `no-external-import`: skipped.
 - `prefer-ascii`: `project/prefer-ascii` in `scripts/project-lint-source.ts`,
-  copied from temeddix/eximium (node-migration) with its `allowFiles` option.
+  copied from temeddix/eximium (node-migration). Rules take no `allowFiles`
+  option; a file exemption is a `projectOverrides` entry in
+  `scripts/project-lint.ts` with a why-comment.
   It also covers hugoalh's `prefer-ascii-identifier`.
 - `max-params` 4 and `complexity` 32 with Oxlint's built-ins. These are
   hugoalh's defaults; that `recommended` entry did not actually turn them on.
@@ -33,13 +35,18 @@ with no options (excluding `hugoalh/no-duplicate-imports` and
   `unicorn/no-useless-switch-case`, `no-unneeded-ternary`, `no-useless-catch`;
   `curly` covers `prefer-statement-block`.
 - No built-in, so ported as repo-local rules under their hugoalh names
-  (`project/<name>`): `no-duplicate-awaits`, `no-duplicate-typeofs`,
-  `no-duplicate-voids`, `no-empty-yield`, `no-enum`, `no-nan`,
+  (`project/<name>`): `no-duplicate-typeofs`, `no-empty-yield`, `no-nan`,
   `no-unsafe-number` (`no-loss-of-precision` misses literals such as `1e300`)
   and `no-useless-continue` in `scripts/project-lint-hugoalh.ts`;
   `no-duplicate-interfaces`, `no-duplicate-types`, `no-modifier-private` and
   `no-useless-type` in `scripts/project-lint-hugoalh-types.ts`. A gap is not
   an acceptable end state ([[lint-parity-never-shrinks]]).
+- Dropped ports (user, 2026-10-19), each covered elsewhere:
+  `no-duplicate-awaits` by `unicorn/no-unnecessary-await`,
+  `no-duplicate-voids` by `typescript/no-meaningless-void-operator`, and
+  `no-enum` by `explicit-types/no-enum` (devDependency
+  `eslint-plugin-explicit-types`, loaded in `jsPlugins`, only that one rule
+  enabled).
 
 Before removing a line from `configs.project`, find what else covers it
 ([[lint-parity-never-shrinks]]). `maxWarnings: 0` keeps Deno's

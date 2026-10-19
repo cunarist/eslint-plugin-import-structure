@@ -25,16 +25,3 @@ export interface ProjectRuleTypes extends ExplicitRuleTypes {
 
 /** A repo-local rule, in ESLint's standard `create` form. */
 export type ProjectRule = RuleDefinition<ProjectRuleTypes>;
-
-/** The options of a rule that exempts whole files, matched by path suffix. */
-export interface AllowFilesOptions {
-  allowFiles: string[];
-}
-
-/** The type parameters of a rule that takes `AllowFilesOptions`. */
-export interface FileExemptRuleTypes extends Omit<ProjectRuleTypes, "RuleOptions"> {
-  RuleOptions: [AllowFilesOptions];
-}
-
-/** A repo-local rule that exempts the files its options name. */
-export type FileExemptRule = RuleDefinition<FileExemptRuleTypes>;

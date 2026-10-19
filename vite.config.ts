@@ -2,18 +2,28 @@ import { defineConfig } from "vite-plus";
 
 import importStructure from "#plugin";
 
-import projectLint from "./scripts/project-lint.ts";
+import projectLint, { projectOverrides } from "./scripts/project-lint.ts";
 
 export default defineConfig({
   lint: {
     plugins: ["typescript", "unicorn", "oxc", "import"],
     // Lints itself from source; `scripts/project-lint.ts` holds the repo's own
     // rule list and repo-only rules, never published.
-    jsPlugins: ["./src/plugin/index.ts", "./scripts/project-lint.ts"],
-    categories: { correctness: "error", suspicious: "error", pedantic: "error", perf: "error" },
+    jsPlugins: [
+      "./src/plugin/index.ts",
+      "eslint-plugin-explicit-types",
+      "./scripts/project-lint.ts",
+    ],
+    categories: {
+      correctness: "error",
+      suspicious: "error",
+      pedantic: "error",
+      perf: "error",
+      style: "error",
+      restriction: "error",
+    },
     rules: { ...importStructure.configs.all.rules, ...projectLint.configs.project.rules },
-    // The rule registry must import every rule, more than max-dependencies allows.
-    overrides: [{ files: ["src/rules/index.ts"], rules: { "import/max-dependencies": "off" } }],
+    overrides: projectOverrides,
     options: {
       typeAware: true,
       typeCheck: true,

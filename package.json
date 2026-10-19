@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-import-structure",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "ESLint and Oxlint rules that keep a module graph layered and free of cycles, with package.json \"#\" imports as the layer order.",
   "keywords": [
     "eslint",
@@ -45,6 +45,7 @@
     "@typescript-eslint/types": "^8.71.1",
     "eslint": "^9.39.5",
     "eslint-doc-generator": "^3.7.1",
+    "eslint-plugin-explicit-types": "^0.7.0",
     "vite-plus": "^1.1.0"
   },
   "engines": {

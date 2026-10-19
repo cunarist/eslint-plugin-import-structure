@@ -32,11 +32,11 @@ export function groupName(group: number): string {
  * Orders specifiers by code point rather than locale, so the result does not
  * depend on collation rules that quietly ignore punctuation.
  */
-export function compareSpecifiers(a: string, b: string): number {
-  if (a < b) {
+export function compareSpecifiers(left: string, right: string): number {
+  if (left < right) {
     return -1;
   }
-  return a > b ? 1 : 0;
+  return left > right ? 1 : 0;
 }
 
 /** One import declaration with its specifier and group. */
@@ -56,8 +56,8 @@ export function isSideEffect(node: TSESTree.ImportDeclaration): boolean {
 }
 
 /** Sorts imports by group, then by specifier. */
-export function compareEntries(a: ImportEntry, b: ImportEntry): number {
-  return a.group - b.group || compareSpecifiers(a.specifier, b.specifier);
+export function compareEntries(left: ImportEntry, right: ImportEntry): number {
+  return left.group - right.group || compareSpecifiers(left.specifier, right.specifier);
 }
 
 /**

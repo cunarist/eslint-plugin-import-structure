@@ -2,9 +2,11 @@
  * The `project` plugin's ports of `@hugoalh/deno-lint-rules` 0.8.3
  * `recommended` rules that read single expressions and statements, which
  * the old Deno config loaded and Oxlint has no built-in for:
- * `no-duplicate-awaits`, `no-duplicate-typeofs`, `no-duplicate-voids`,
- * `no-empty-yield`, `no-enum`, `no-nan`, `no-unsafe-number`, and
- * `no-useless-continue`. Each keeps its original name and behavior.
+ * `no-duplicate-typeofs`, `no-empty-yield`, `no-nan`, `no-unsafe-number`,
+ * and `no-useless-continue`. Each keeps its original name and behavior.
+ * `no-duplicate-awaits` and `no-duplicate-voids` are covered by
+ * `unicorn/no-unnecessary-await` and `typescript/no-meaningless-void-operator`,
+ * and `no-enum` by `explicit-types/no-enum`.
  *
  * @module
  */
@@ -26,71 +28,38 @@ type LoopStatement =
   | TSESTree.WhileStatement;
 
 /**
- * A rule that reports an operator applied twice in a row, such as
- * `await await x`. When `safeFix` is set, dropping the outer keyword gives
- * the same value, so the rule fixes it; otherwise it only reports.
- */
-function doubledOperatorRule(
-  keyword: "await" | "typeof" | "void",
-  effect: string,
-  safeFix: boolean,
-): ProjectRule {
-  return {
-    meta: {
-      type: "problem",
-      docs: { description: `Disallow \`${keyword}\` applied twice in a row` },
-      ...(safeFix ? { fixable: "code" as const } : {}),
-      schema: [],
-      messages: { doubled: `Multiple \`${keyword}\`s ${effect}, possibly not intended.` },
-    },
-    create(context) {
-      function check(node: TSESTree.AwaitExpression | TSESTree.UnaryExpression): void {
-        const inner = node.argument;
-        const doubled =
-          keyword === "await"
-            ? inner.type === "AwaitExpression"
-            : inner.type === "UnaryExpression" && inner.operator === keyword;
-        if (!doubled || (node.type === "UnaryExpression" && node.operator !== keyword)) {
-          return;
-        }
-        const range: [number, number] = [node.range[0], node.range[0] + keyword.length];
-        context.report({
-          loc: {
-            start: context.sourceCode.getLocFromIndex(range[0]),
-            end: context.sourceCode.getLocFromIndex(range[1]),
-          },
-          messageId: "doubled",
-          ...(safeFix ? { fix: (fixer): RuleTextEdit => fixer.removeRange(range) } : {}),
-        });
-      }
-      return keyword === "await" ? { AwaitExpression: check } : { UnaryExpression: check };
-    },
-  };
-}
-
-/** `no-duplicate-awaits` - `await await x` awaits once, the same as `await x`. */
-export const noDuplicateAwaitsRule: ProjectRule = doubledOperatorRule(
-  "await",
-  "have the same effect as a single `await`",
-  true,
-);
-
-/**
  * `no-duplicate-typeofs` - `typeof typeof x` is always `"string"`. Not
  * fixed, since dropping one `typeof` changes the value.
  */
-export const noDuplicateTypeofsRule: ProjectRule = doubledOperatorRule(
-  "typeof",
-  'always return `"string"`',
-  false,
-);
-
-/** `no-duplicate-voids` - `void void x` is the same as `void x`. */
-export const noDuplicateVoidsRule: ProjectRule = doubledOperatorRule(
-  "void",
-  "have the same effect as a single `void`",
-  true,
-);
+export const noDuplicateTypeofsRule: ProjectRule = {
+  meta: {
+    type: "problem",
+    docs: { description: "Disallow `typeof` applied twice in a row" },
+    schema: [],
+    messages: { doubled: 'Multiple `typeof`s always return `"string"`, possibly not intended.' },
+  },
+  create(context) {
+    return {
+      UnaryExpression(node: TSESTree.UnaryExpression): void {
+        const inner = node.argument;
+        if (
+          node.operator !== "typeof" ||
+          inner.type !== "UnaryExpression" ||
+          inner.operator !== "typeof"
+        ) {
+          return;
+        }
+        context.report({
+          loc: {
+            start: context.sourceCode.getLocFromIndex(node.range[0]),
+            end: context.sourceCode.getLocFromIndex(node.range[0] + "typeof".length),
+          },
+          messageId: "doubled",
+        });
+      },
+    };
+  },
+};
 
 /** `no-empty-yield` - a `yield` with no expression, likely missing one. */
 export const noEmptyYieldRule: ProjectRule = {
@@ -106,23 +75,6 @@ export const noEmptyYieldRule: ProjectRule = {
         if (node.argument === null) {
           context.report({ node, messageId: "empty" });
         }
-      },
-    };
-  },
-};
-
-/** `no-enum` - `enum` is not type safe; use a union of literals. */
-export const noEnumRule: ProjectRule = {
-  meta: {
-    type: "suggestion",
-    docs: { description: "Disallow `enum`" },
-    schema: [],
-    messages: { enum: "`enum` is not type safe, so it is not allowed." },
-  },
-  create(context) {
-    return {
-      TSEnumDeclaration(node: TSESTree.TSEnumDeclaration): void {
-        context.report({ node, messageId: "enum" });
       },
     };
   },

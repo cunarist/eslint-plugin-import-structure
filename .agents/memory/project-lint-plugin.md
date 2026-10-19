@@ -19,7 +19,7 @@ Oxlint plugin with `meta.name` `"project"`, loaded through `jsPlugins` in
 applies, so rules live in themed sibling files sharing the prefix and
 `scripts/project-lint.ts` imports them by relative path. In eslint-plugin-import-structure:
 `project-lint.ts` (plugin and rule list), `project-lint-source.ts`
-(`prefer-ascii` with its `allowFiles` option, and `no-disable-comments`), `project-lint-modules.ts` (`no-asset-imports`), and
+(`prefer-ascii` and `no-disable-comments`), `project-lint-modules.ts` (`no-asset-imports`), and
 `project-lint-types.ts` (shared rule types). Don't add `scripts/rules/`.
 
 ```ts
@@ -56,5 +56,5 @@ export default plugin;
   and every repo should look the same.
 
 `scripts/` is tooling, not production code: never packed or published, and
-no tests. Narrow `overrides` for `scripts/**` are allowed when a script truly
-needs one (e.g. `no-console`); see [[lint-overrides-policy]].
+no tests. Its lint exceptions are entries in `projectOverrides`, e.g. the
+Node code entry turning `no-console` off; see [[lint-config]].

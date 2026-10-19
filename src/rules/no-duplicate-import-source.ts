@@ -41,7 +41,7 @@ export const noDuplicateImportSourceRule: ExplicitRule = {
     },
   },
   create(context) {
-    const groups = new Map<string, TSESTree.ImportDeclaration[]>();
+    const groups: Map<string, TSESTree.ImportDeclaration[]> = new Map();
     return {
       ImportDeclaration(node: TSESTree.ImportDeclaration): void {
         const specifier = node.source.value;

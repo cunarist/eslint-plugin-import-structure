@@ -68,7 +68,7 @@ import { x } from "../x.ts"; // no: no ../ anywhere
 - An area used from outside exposes its API through its alias target, and
   callers import the alias (`#ui`), not files inside it.
 - Barrels are also the standard fix for `import/max-dependencies`: one barrel
-  import replaces many direct ones ([[lint-overrides-policy]]).
+  import replaces many direct ones ([[lint-config]]).
 - `import/no-cycle` is on; a barrel must not create a cycle.
 
 Relative imports are written with the `.ts` extension.

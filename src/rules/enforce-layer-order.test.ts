@@ -40,7 +40,7 @@ testRule("enforce-layer-order", enforceLayerOrderRule, {
 
     // leaves a substituted backtick specifier alone, since nothing is known
     {
-      code: "const n = 'components';\nconst m = await import(`#${n}`);\nexport const x = m;\n",
+      code: `const n = 'components';\nconst m = await import(\`#\${n}\`);\nexport const x = m;\n`,
       filename: UTILS,
     },
 

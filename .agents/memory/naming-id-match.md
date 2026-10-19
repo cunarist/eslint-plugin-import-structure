@@ -33,7 +33,7 @@ const user_name = 1; // error
 - `declare` lines and snake_case globals are rare and accepted as they are.
 - **Types:** classes, interfaces, type aliases, enums are PascalCase
   (`pascal-case-types` from explicit-types' `naming` config); string-union
-  members are UPPER_SNAKE_CASE; no `enum`.
+  members are UPPER_SNAKE_CASE ([[upper-snake-enum-values]]); no `enum`.
 - **Type parameters:** the user wants single capital letters (`T`, `K`), not
   `Item`; explicit-types PR 2 adds `single-capital-type-params` to `naming`.
   Write new code that way already.

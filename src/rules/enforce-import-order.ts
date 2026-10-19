@@ -24,9 +24,9 @@ const NEWLINE_PATTERN: RegExp = /\n/gu;
  * `SCREAMING_CASE` constants. Sorting those by code point would clump them by
  * case, which hides the alphabetical order a reader is scanning for.
  */
-function compareMembers(a: string, b: string): number {
-  const lowered = compareSpecifiers(a.toLowerCase(), b.toLowerCase());
-  return lowered === 0 ? compareSpecifiers(a, b) : lowered;
+function compareMembers(left: string, right: string): number {
+  const lowered = compareSpecifiers(left.toLowerCase(), right.toLowerCase());
+  return lowered === 0 ? compareSpecifiers(left, right) : lowered;
 }
 
 /**
@@ -75,7 +75,9 @@ function fixMemberOrder(
     return null;
   }
   const text = source.text;
-  const sorted = members.toSorted((a, b) => compareMembers(memberName(a), memberName(b)));
+  const sorted = members.toSorted((left, right) =>
+    compareMembers(memberName(left), memberName(right)),
+  );
   // Match the existing layout rather than reflowing it, so a list the
   // formatter already broke across lines stays broken.
   const multiline = text.slice(start, end).includes("\n");
