@@ -147,9 +147,6 @@ const rules: DummyRuleMap = {
   "unicorn/no-null": "off",
   // Off: collides with Oxfmt, which lowercases hex digits back.
   "unicorn/number-literal-case": "off",
-  // Off: collides with `strictFunctionTypes`: `OxlintRunner` relies on method
-  // bivariance to bridge the two hosts' rule types.
-  "typescript/method-signature-style": "off",
 
   // Off: TypeScript's type checking already proves switches exhaustive.
   "typescript/switch-exhaustiveness-check": "off",
@@ -157,6 +154,8 @@ const rules: DummyRuleMap = {
   "default-case": "off",
   // Off: not type-aware; `noImplicitReturns` covers missing returns.
   "consistent-return": "off",
+  // Off: misfires on complete switches, like `consistent-return`.
+  "typescript/consistent-return": "off",
   // Off: sequential awaits in loops are intentional; workarounds cost more.
   "no-await-in-loop": "off",
 
@@ -200,6 +199,9 @@ export const projectOverrides: OxlintOverride[] = [
   { files: ["vite.config.ts", "scripts/**"], rules: nodeRules },
   // The rule registry imports every rule file by design.
   { files: ["src/rules/index.ts"], rules: { "import/max-dependencies": "off" } },
+  // `OxlintRunner` relies on method bivariance (exempt from
+  // `strictFunctionTypes`) to bridge the two hosts' rule types.
+  { files: ["src/testing/index.ts"], rules: { "typescript/method-signature-style": "off" } },
 ];
 
 /**

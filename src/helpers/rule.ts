@@ -6,8 +6,8 @@ import type { TSESTree } from "@typescript-eslint/types";
  * comment lookups ESLint and Oxlint each implement on it.
  */
 export interface ExplicitSourceCode extends TextSourceCode {
-  getText(node?: TSESTree.Node): string;
-  getAllComments(): TSESTree.Comment[];
+  getText: (node?: TSESTree.Node) => string;
+  getAllComments: () => TSESTree.Comment[];
 }
 
 /**
