@@ -14,8 +14,8 @@ import type { ExplicitRuleTypes, ExplicitSourceCode } from "#helpers";
  * position lookup both hosts provide.
  */
 export interface ProjectSourceCode extends ExplicitSourceCode {
-  getAllComments(): TSESTree.Comment[];
-  getLocFromIndex(index: number): Position;
+  getAllComments: () => TSESTree.Comment[];
+  getLocFromIndex: (index: number) => Position;
 }
 
 /** The published rules' type parameters, with comments readable. */
