@@ -62,7 +62,7 @@ const basePlugin: Plugin = {
     // only `.ts` imports. A release bumps both; `tests/package-meta.test.ts`
     // fails if they drift apart.
     name: "eslint-plugin-import-structure",
-    version: "0.10.4",
+    version: "0.10.5",
     namespace: NAMESPACE,
   },
   rules: Object.fromEntries(rules),

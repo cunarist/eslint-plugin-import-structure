@@ -38,7 +38,7 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 - It writes each doc's header (title, description, configs) and the README
   rules list.
 - Settings used: `configEmoji` per config, `ignoreConfig: ["all"]` (it would
-  mark every rule), `ruleListColumns: ["name", "description", "configsError"]`,
+  mark every rule), `ruleListColumns: ["name", "description", "configsError", "fixable", "hasSuggestions"]`,
   `ruleDocSectionInclude: ["Rule Details", "When Not To Use It"]`, and
   `urlConfigs` pointing at the README's configs section.
 - **Gotchas:** wrap the README list in `<!-- prettier-ignore-start -->` /
@@ -51,6 +51,19 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 
 - For library users only (no contributor content).
 - States that it targets both ESLint and Oxlint and needs Node.js 22.18+.
-- Shows install plus ESLint and Oxlint usage, one short paragraph per config,
-  then the generated rules list. It links to the rule docs, never repeats
-  them.
+- Order: pitch, diagram, Why, Install, Usage (ESLint and Oxlint snippets, a
+  `package.json` `imports` example, one bad/good block), Configs and rules
+  (keep the `#configs-and-rules` and `#modules` anchors: `urlConfigs` and the
+  rule docs link to them), then the generated rules list under `### Rules`.
+  It links to the rule docs, never repeats them.
+- The pitch opens with the reader's pain: you can't tell whether one module
+  may import another without making a cycle (TDZ `ReferenceError` in ESM,
+  silent `undefined` in CommonJS), and layers make the answer visible.
+- The diagram is a generated SVG kept in the wiki git, not this repo:
+  `images/module-layers.svg` in
+  `https://github.com/cunarist/eslint-plugin-import-structure.wiki.git`
+  (branch `master`), with its own card that follows `prefers-color-scheme`. The
+  README embeds it by
+  `https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg`
+  so npmjs.com renders it too. It shows four modules (`#app`, `#billing`,
+  `#auth`, `#utils`) as trees of files, with imports only flowing rightward.
