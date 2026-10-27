@@ -4,7 +4,7 @@ Can the `#billing` module import `#auth` without creating a cycle? With layers y
 This plugin turns the order of your `package.json` `imports` into those layers, and reports upward imports and deep imports into another module's internals.
 Works in both [ESLint](https://eslint.org) and [Oxlint](https://oxc.rs/docs/guide/usage/linter).
 
-![A layered graph of 34 modules, from #app at the top down to #utils and #types, where every import flows downward](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
+![Four modules (#app, #billing, #auth, #utils), each a tree of files behind its index.ts, importing only modules to their right](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
 
 ## Why
 

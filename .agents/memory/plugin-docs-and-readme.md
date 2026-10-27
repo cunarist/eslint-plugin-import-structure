@@ -59,11 +59,11 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 - The pitch opens with the reader's pain: you can't tell whether one module
   may import another without making a cycle (TDZ `ReferenceError` in ESM,
   silent `undefined` in CommonJS), and layers make the answer visible.
-- The diagram is a hand-written SVG kept in the wiki git, not this repo:
+- The diagram is a generated SVG kept in the wiki git, not this repo:
   `images/module-layers.svg` in
   `https://github.com/cunarist/eslint-plugin-import-structure.wiki.git`
-  (branch `master`), with its own white card so it reads on dark themes. The
+  (branch `master`), with its own card that follows `prefers-color-scheme`. The
   README embeds it by
   `https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg`
-  so npmjs.com renders it too. Its aliases (`#billing`, `#auth`, `#db`)
-  match the README's examples.
+  so npmjs.com renders it too. It shows four modules (`#app`, `#billing`,
+  `#auth`, `#utils`) as trees of files, with imports only flowing rightward.
