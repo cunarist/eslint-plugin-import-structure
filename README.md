@@ -1,14 +1,18 @@
 # eslint-plugin-import-structure
 
-Keep a TypeScript module graph layered and free of cycles, using the `imports` field of `package.json` as the map.
+Can `#billing` import `#auth` without creating a cycle? Without layers, you guess.
+With layers, the answer is right there in `package.json`, and the linter enforces it.
 Works in both [ESLint](https://eslint.org) and [Oxlint](https://oxc.rs/docs/guide/usage/linter).
 
-![Diagram: the package.json imports aliases #app, #utils and #types each own a folder through its index.ts, and their order is the layer order. #app may import "#utils" and #utils may import "#types". Reaching into an internal file with "#utils/format.ts" and importing "#utils" upward from #types are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/cunarist/eslint-plugin-import-structure/main/docs/images/module-layers.svg)
+![Diagram: the package.json imports aliases #billing, #auth and #db each own a folder through its index.ts, and their order is the layer order. #billing may import "#auth" and #auth may import "#db". Reaching into an internal file with "#auth/session.ts" and importing "#auth" upward from #db are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
 
 ## Why
 
-In a growing codebase, any file can import any other: modules leak their internals, and cycles creep in.
-This plugin turns each `#` alias into a module with one entry point, and turns the alias order into a one-way layer order, so cycles between modules cannot happen.
+A wrong guess compiles fine and bites at runtime: an import cycle in native ESM can throw `ReferenceError: Cannot access 'x' before initialization`, and CommonJS output or some bundlers hand you a silent `undefined`.
+Worse, a cycle usually hides until something shuffles the import order.
+
+This plugin turns each `#` alias in `package.json` into a module with one front door, and turns the alias order into a one-way layer order.
+A module imports only the modules listed below it, so cycles between modules can't form, and `package.json` doubles as your architecture map.
 
 ## Install
 
@@ -47,21 +51,21 @@ Then declare your modules in `package.json`, top layer first:
 ```json
 {
   "imports": {
-    "#app": "./src/app/index.ts",
-    "#utils": "./src/utils/index.ts",
-    "#types": "./src/types/index.ts"
+    "#billing": "./src/billing/index.ts",
+    "#auth": "./src/auth/index.ts",
+    "#db": "./src/db/index.ts"
   }
 }
 ```
 
 ```ts
-// in src/utils/format.ts
-import { App } from "#app"; // ❌ upward import (enforce-layer-order)
-import type { User } from "#types"; // ✅ a lower layer, through its alias
-import { user } from "#types/user.ts"; // ❌ deep import (no-barrel-bypass)
+// in src/auth/session.ts
+import { charge } from "#billing"; // ❌ upward import (enforce-layer-order)
+import { query } from "#db"; // ✅ a lower layer, through its alias
+import { pool } from "#db/pool.ts"; // ❌ deep import (no-barrel-bypass)
 
 import { x } from "../x.ts"; // ❌ parent path (no-parent-import)
-import { helper } from "./helper.ts"; // ✅ a sibling in the same module
+import { hash } from "./hash.ts"; // ✅ a sibling in the same module
 ```
 
 ## Configs and rules
