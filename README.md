@@ -1,18 +1,21 @@
 # eslint-plugin-import-structure
 
-Can `#billing` import `#auth` without creating a cycle? Without layers, you guess.
-With layers, the answer is right there in `package.json`, and the linter enforces it.
+Import cycles sneak in quietly and blow up at runtime, and deep imports into another module's internals make every refactor a scavenger hunt.
+This plugin turns the order of your `package.json` `imports` into layers: `#billing` may import `#auth`, never the other way round, and the linter enforces it.
 Works in both [ESLint](https://eslint.org) and [Oxlint](https://oxc.rs/docs/guide/usage/linter).
 
-![Diagram: the package.json imports aliases #billing, #auth and #db each own a folder through its index.ts, and their order is the layer order. #billing may import "#auth" and #auth may import "#db". Reaching into an internal file with "#auth/session.ts" and importing "#auth" upward from #db are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
+![Diagram: can #billing import #auth? Yes. Can #db import #auth? No. The package.json imports aliases #billing, #auth and #db each own a folder through its index.ts, and their order is the layer order. #billing may import "#auth" and #auth may import "#db". Reaching into an internal file with "#auth/session.ts" and importing "#auth" upward from #db are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
 
 ## Why
 
-A wrong guess compiles fine and bites at runtime: an import cycle in native ESM can throw `ReferenceError: Cannot access 'x' before initialization`, and CommonJS output or some bundlers hand you a silent `undefined`.
-Worse, a cycle usually hides until something shuffles the import order.
+A cycle compiles fine, then bites at runtime: `ReferenceError: Cannot access 'x' before initialization` in native ESM, or a silent `undefined` from CommonJS output and some bundlers.
+Worse, it hides until something shuffles the import order.
 
-This plugin turns each `#` alias in `package.json` into a module with one front door, and turns the alias order into a one-way layer order.
-A module imports only the modules listed below it, so cycles between modules can't form, and `package.json` doubles as your architecture map.
+Here, each `#` alias is a module with one front door, and the alias order is a one-way layer order.
+A module imports only the modules listed below it, so cycles between modules can't form in the first place.
+Unlike cycle detectors that walk the whole import graph, each rule checks one file against the declared layers, so it stays fast and the error names the alias to fix.
+
+`package.json` becomes your architecture map.
 
 ## Install
 
@@ -81,7 +84,7 @@ The order of the `#` aliases in `package.json` is the layer order, top first; a 
 An alias owns its target, and code outside the owned area reaches it only through the alias.
 The rules never depend on folder or file names; an alias may point anywhere.
 
-- An alias to a folder's `index.ts` owns that folder and everything below it. An alias to any other file owns only that file.
+- An alias to a folder's `index` file (`index.ts`, or any other extension) owns that folder and everything below it. An alias to any other file owns only that file.
 - No file may be owned by 2 aliases: no alias inside another alias's area, and no 2 aliases with the same target.
   `enforce-layer-order` reports an overlap once at the top of every file 2 aliases claim, since lint cannot report on `package.json`.
 - Outside an area, any other route to an owned file is a bypass: a deeper alias specifier such as `#a/one.ts` (`no-barrel-bypass`), or a relative path (`no-relative-bypass`, and `prefer-alias-import`, which rewrites a path to the alias's exact target).
