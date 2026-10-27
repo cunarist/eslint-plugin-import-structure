@@ -38,7 +38,7 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 - It writes each doc's header (title, description, configs) and the README
   rules list.
 - Settings used: `configEmoji` per config, `ignoreConfig: ["all"]` (it would
-  mark every rule), `ruleListColumns: ["name", "description", "configsError"]`,
+  mark every rule), `ruleListColumns: ["name", "description", "configsError", "fixable", "hasSuggestions"]`,
   `ruleDocSectionInclude: ["Rule Details", "When Not To Use It"]`, and
   `urlConfigs` pointing at the README's configs section.
 - **Gotchas:** wrap the README list in `<!-- prettier-ignore-start -->` /
@@ -51,6 +51,11 @@ Keep `ts` examples valid at top level; `vp fmt` reformats Markdown.
 
 - For library users only (no contributor content).
 - States that it targets both ESLint and Oxlint and needs Node.js 22.18+.
-- Shows install plus ESLint and Oxlint usage, one short paragraph per config,
-  then the generated rules list. It links to the rule docs, never repeats
-  them.
+- Order: pitch, diagram, Why, Install, Usage (ESLint and Oxlint snippets, a
+  `package.json` `imports` example, one bad/good block), Configs and rules
+  (keep the `#configs-and-rules` and `#modules` anchors: `urlConfigs` and the
+  rule docs link to them), then the generated rules list under `### Rules`.
+  It links to the rule docs, never repeats them.
+- The diagram is a hand-written SVG, `docs/images/module-layers.svg`, with
+  its own white card so it reads on dark themes. The README embeds it by its
+  raw.githubusercontent.com URL on `main` so npmjs.com renders it too.
