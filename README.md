@@ -30,7 +30,7 @@ Requires Node.js 22.18+.
 ## Usage
 
 ```ts
-// ESLint 9: eslint.config.ts (needs eslint, typescript-eslint, and jiti)
+// ESLint 9+: eslint.config.ts (needs eslint, typescript-eslint, and jiti)
 import plugin from "eslint-plugin-import-structure";
 import { parser } from "typescript-eslint";
 
