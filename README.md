@@ -1,10 +1,10 @@
 # eslint-plugin-import-structure
 
-Import cycles sneak in quietly and blow up at runtime, and deep imports into another module's internals make every refactor a scavenger hunt.
-This plugin turns the order of your `package.json` `imports` into layers: `#billing` may import `#auth`, never the other way round, and the linter enforces it.
+Can the `#billing` module import `#auth` without creating a cycle? With layers you can see the answer, and ESLint enforces it.
+This plugin turns the order of your `package.json` `imports` into those layers, and reports upward imports and deep imports into another module's internals.
 Works in both [ESLint](https://eslint.org) and [Oxlint](https://oxc.rs/docs/guide/usage/linter).
 
-![Diagram: can #billing import #auth? Yes. Can #db import #auth? No. The package.json imports aliases #billing, #auth and #db each own a folder through its index.ts, and their order is the layer order. #billing may import "#auth" and #auth may import "#db". Reaching into an internal file with "#auth/session.ts" and importing "#auth" upward from #db are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
+![Diagram: can the #billing module import #auth? Yes. Can #db import #auth? No. The package.json imports aliases #billing, #auth and #db each own a folder through its index.ts, and their order is the layer order. #billing may import "#auth" and #auth may import "#db". Reaching into an internal file with "#auth/session.ts" and importing "#auth" upward from #db are reported. Files inside a module import each other relatively.](https://raw.githubusercontent.com/wiki/cunarist/eslint-plugin-import-structure/images/module-layers.svg)
 
 ## Why
 
