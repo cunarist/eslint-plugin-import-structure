@@ -14,16 +14,16 @@ This plugin turns each `#` alias into a module with one entry point, and turns t
 
 ```sh
 npm install --save-dev eslint-plugin-import-structure
+# for ESLint, also:
+npm install --save-dev eslint typescript-eslint jiti
 ```
 
 Requires Node.js 22.18+.
 
 ## Usage
 
-The package's only export is the plugin; its configs are at `plugin.configs`.
-
 ```ts
-// ESLint 9: eslint.config.ts (loading a .ts config needs jiti)
+// ESLint 9: eslint.config.ts (needs eslint, typescript-eslint, and jiti)
 import plugin from "eslint-plugin-import-structure";
 import { parser } from "typescript-eslint";
 
@@ -56,11 +56,12 @@ Then declare your modules in `package.json`, top layer first:
 
 ```ts
 // in src/utils/format.ts
-import type { User } from "#types"; // ✅ a lower layer, through its alias
-import { helper } from "./helper.ts"; // ✅ a sibling in the same module
 import { App } from "#app"; // ❌ upward import (enforce-layer-order)
+import type { User } from "#types"; // ✅ a lower layer, through its alias
 import { user } from "#types/user.ts"; // ❌ deep import (no-barrel-bypass)
+
 import { x } from "../x.ts"; // ❌ parent path (no-parent-import)
+import { helper } from "./helper.ts"; // ✅ a sibling in the same module
 ```
 
 ## Configs and rules
@@ -95,14 +96,12 @@ The rules never depend on folder or file names; an alias may point anywhere.
 ```ts
 // in main.ts, which no alias owns
 import { a } from "#a"; // ✅
-import { one } from "#a/one.ts"; // ❌ deeper alias specifier
 import { two } from "./a/two.ts"; // ❌ relative path into #a
 import { f } from "./b/f.ts"; // ❌ relative path to a file alias; use "#f"
 import { g } from "./b/g.ts"; // ✅ unowned
 // in a/one.ts, owned by #a
 import { two } from "./two.ts"; // ✅ sibling
 import { deep } from "./sub/deep.ts"; // ✅ subfolder of the same area
-import { x } from "../x.ts"; // ❌ no ../ anywhere
 ```
 
 The other rules (import order, duplicate sources, wildcards, absolute paths, self-imports) are not about aliases and apply to every file.
