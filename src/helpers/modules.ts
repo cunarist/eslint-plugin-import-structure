@@ -3,9 +3,13 @@
  * own: which alias owns a file, which one a specifier names, and whether an
  * import touches an owned area at all.
  *
- * An alias owns its target. An alias to a folder's `index.ts` owns that
- * folder and everything below it; an alias to any other file owns only that
- * file. Nothing here depends on folder or file names.
+ * An alias owns its target minus the area of any deeper alias inside it. An
+ * alias to a folder's `index.ts` owns that folder and everything below it;
+ * an alias to any other file owns only that file. Where one area lies inside
+ * another, the deeper alias owns its part and the outer one owns the rest, so
+ * every file has a single owner: the alias with the deepest area holding it.
+ * Two aliases on the same area tie, which `enforce-layer-order` reports.
+ * Nothing here depends on folder or file names.
  */
 
 import {
@@ -31,41 +35,55 @@ function ownsPath(entry: ModuleEntry, path: string): boolean {
 }
 
 /**
- * Every alias whose area holds a file, in declaration order. More than one
- * means two aliases overlap, which `enforce-layer-order` reports.
+ * The aliases that own a file: those whose area holds it and lies deepest,
+ * in declaration order. An outer alias gives way to any alias inside its
+ * area, so this is one alias unless two share the same area, which
+ * `enforce-layer-order` reports as an overlap.
  */
-export function claimingEntries(config: ImportsConfig, filePath: string): ModuleEntry[] {
+export function owningEntries(config: ImportsConfig, filePath: string): ModuleEntry[] {
   const path = normalizePath(filePath);
-  return config.entries.filter((entry) => ownsPath(entry, path));
-}
-
-/**
- * Whether `entry` is among the aliases that claim a file. A file two aliases
- * overlap on counts as inside both areas, so the overlap is reported once by
- * `enforce-layer-order` rather than again as a bypass.
- */
-export function isClaimedBy(config: ImportsConfig, filePath: string, entry: ModuleEntry): boolean {
-  return claimingEntries(config, filePath).some((claimant) => claimant.index === entry.index);
-}
-
-/**
- * Finds the alias that owns a file, which is the one with the most specific
- * area containing it. Returns `null` for a file no alias owns.
- */
-export function findOwningEntry(config: ImportsConfig, filePath: string): ModuleEntry | null {
-  let best: ModuleEntry | null = null;
-  for (const entry of claimingEntries(config, filePath)) {
-    if (best === null || entry.dir.length > best.dir.length) {
-      best = entry;
+  let owners: ModuleEntry[] = [];
+  for (const entry of config.entries) {
+    const deepest = owners[0];
+    if (!ownsPath(entry, path)) {
+      continue;
+    }
+    if (deepest === undefined || entry.dir.length > deepest.dir.length) {
+      owners = [entry];
+    } else if (entry.dir.length === deepest.dir.length) {
+      owners.push(entry);
     }
   }
-  return best;
+  return owners;
+}
+
+/**
+ * Whether `entry` owns a file. A file two aliases share an area on counts as
+ * inside both, so the overlap is reported once by `enforce-layer-order`
+ * rather than again as a bypass.
+ */
+export function isOwnedBy(config: ImportsConfig, filePath: string, entry: ModuleEntry): boolean {
+  return owningEntries(config, filePath).some((owner) => owner.index === entry.index);
+}
+
+/**
+ * Finds the alias that owns a file, the one with the deepest area holding
+ * it; the first declared when two share that area. Returns `null` for a file
+ * no alias owns.
+ */
+export function findOwningEntry(config: ImportsConfig, filePath: string): ModuleEntry | null {
+  return owningEntries(config, filePath)[0] ?? null;
 }
 
 /**
  * The exact alias a deeper `#` specifier reaches past, such as `#utils` for
  * `#utils/internal.ts`, whether or not a subpath pattern makes it resolve.
- * The longest alias wins. Returns `null` when no alias is a prefix.
+ * It is the owner of the file the specifier names: the file a matching
+ * subpath pattern resolves to, or else, under a folder alias prefix, the rest
+ * of the specifier read as a path in that folder. So `#a/sub/x.ts` reaches
+ * past `#a-sub` when that alias owns `a/sub/`. A named file no alias owns
+ * falls back to the longest alias prefix. Returns `null` when no alias is a
+ * prefix.
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   let best: ModuleEntry | null = null;
@@ -77,7 +95,37 @@ export function deeperAliasOwner(config: ImportsConfig, specifier: string): Modu
       best = entry;
     }
   }
-  return best;
+  if (best === null) {
+    return null;
+  }
+  const path = namedPath(config, specifier, best);
+  return (path === null ? null : findOwningEntry(config, path)) ?? best;
+}
+
+/**
+ * The file a deeper `#` specifier names under the alias prefix `prefix`:
+ * where a subpath pattern sends it, or else, for a folder alias, the rest of
+ * the specifier read as a path in that folder. Returns `null` when neither
+ * applies.
+ */
+function namedPath(config: ImportsConfig, specifier: string, prefix: ModuleEntry): string | null {
+  const pattern = findPatternEntry(config, specifier);
+  if (pattern !== null) {
+    return patternPath(config, pattern, specifier);
+  }
+  if (!prefix.isBarrel) {
+    return null;
+  }
+  const rest = specifier.slice(prefix.specifier.length + 1).replace(QUERY_PATTERN, "");
+  return resolveFrom(prefix.dir, `./${rest}`);
+}
+
+/** The file a subpath pattern resolves a `#` specifier matching it to. */
+function patternPath(config: ImportsConfig, pattern: PatternEntry, specifier: string): string {
+  const matched = specifier
+    .slice(pattern.prefix.length, specifier.length - pattern.suffix.length)
+    .replace(QUERY_PATTERN, "");
+  return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
 }
 
 /**
@@ -138,13 +186,7 @@ export function resolveLocalSpecifier(filename: string, specifier: string): stri
     return exact.target;
   }
   const pattern = findPatternEntry(config, specifier);
-  if (pattern === null) {
-    return null;
-  }
-  const matched = specifier
-    .slice(pattern.prefix.length, specifier.length - pattern.suffix.length)
-    .replace(QUERY_PATTERN, "");
-  return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
+  return pattern === null ? null : patternPath(config, pattern, specifier);
 }
 
 /**
@@ -170,8 +212,7 @@ export function resolveTarget(
 
 /** Whether a path lies in the area some alias owns. */
 export function isModulePath(config: ImportsConfig, path: string): boolean {
-  const normalized = normalizePath(path);
-  return config.entries.some((entry) => ownsPath(entry, normalized));
+  return findOwningEntry(config, path) !== null;
 }
 
 /**

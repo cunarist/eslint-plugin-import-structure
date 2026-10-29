@@ -11,14 +11,17 @@
 The same principle as [`no-barrel-bypass`](no-barrel-bypass.md), for
 relative paths. An alias owns its target: an alias to a folder's `index.ts`
 owns that folder and everything below it, and an alias to any other file
-owns only that file. Code outside an area reaches it only through the alias.
+owns only that file. An alias inside another alias's area owns its part,
+carved out of the outer area. Code outside an area reaches it only through
+the alias.
 
 - A `./` specifier fires when it lands in an area the importing file is not
   in. It names the alias to import instead. A folder alias's area includes
   the folder path itself, so a directory specifier such as `./a` fires too.
-- A file 2 aliases claim counts as inside both areas, so only
-  `enforce-layer-order` reports the overlap.
-- Inside an area, siblings and subfolders at any depth are free.
+- A file 2 aliases with the same area own counts as inside both areas,
+  so only `enforce-layer-order` reports the overlap.
+- Inside an area, siblings and subfolders at any depth are free, except
+  those inside a deeper alias's area, which are reached through that alias.
 - Files no alias owns are free from anywhere, and no `index.ts` is demanded
   of their folders.
 - A path to an alias's exact target is left to
@@ -33,6 +36,8 @@ Examples of **incorrect** code for this rule:
 import { one } from "./a/one.ts";
 import { deep } from "./a/sub/deep.ts";
 import { a } from "./a";
+// "#a-sub": "./a/sub/index.ts" as well, in a/one.ts
+import { deep } from "./sub/deep.ts";
 ```
 
 Examples of **correct** code for this rule:

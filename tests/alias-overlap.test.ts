@@ -1,11 +1,11 @@
 /**
- * Regression: no file may be owned by two aliases. An alias inside another
- * alias's area and two aliases with the same target both make some file
- * belong to two areas. Lint cannot report on `package.json`, so
- * `enforce-layer-order` fires once at the top of every file two aliases
- * claim, and leaves every other file alone. The other rules count such a
- * file as inside every area that claims it, so the overlap is the only
- * report.
+ * Regression: no two aliases may share an area. Two folder aliases or two
+ * file aliases with the same target make every file of that area belong to
+ * both. Lint cannot report on `package.json`, so `enforce-layer-order` fires
+ * once at the top of every file such a tie owns, and leaves every other file
+ * alone. The other rules count such a file as inside both areas, so the
+ * overlap is the only report. An alias inside another alias's area is no
+ * overlap; see `alias-nesting.test.ts`.
  */
 
 import plugin from "#plugin";
@@ -21,8 +21,8 @@ function rule(id: string): TestedRule {
 }
 
 /**
- * A file in the `overlap/` fixture project: `#a-sub` lies inside `#a`,
- * `#c2` repeats `#c`, `#d-file` lies inside `#d`, and `#e2` repeats `#e`.
+ * A file in the `overlap/` fixture project: `#c2` repeats the folder alias
+ * `#c`, and `#e2` repeats the file alias `#e`.
  */
 function overlap(path: string): string {
   return fixture(`overlap/${path}`);
@@ -30,33 +30,25 @@ function overlap(path: string): string {
 
 const CODE = "export const x = 1;\n";
 
-/** The one error for a file that `aliases` all claim. */
-function claimedBy(aliases: string): { messageId: string; data: { aliases: string } }[] {
+/** The one error for a file that `aliases` all own. */
+function ownedBy(aliases: string): { messageId: string; data: { aliases: string } }[] {
   return [{ messageId: "overlap", data: { aliases } }];
 }
 
 testRule("enforce-layer-order", rule("enforce-layer-order"), {
   valid: [
-    // files only one alias claims
-    { code: CODE, filename: overlap("a/x.ts") },
-    { code: CODE, filename: overlap("a/index.ts") },
-    { code: CODE, filename: overlap("d/other.ts") },
+    // files no alias owns
     { code: CODE, filename: overlap("main.ts") },
+    { code: CODE, filename: overlap("e-other.ts") },
   ],
   invalid: [
-    // a folder alias inside another
-    { code: CODE, filename: overlap("a/sub/x.ts"), errors: claimedBy("#a, #a-sub") },
-    { code: CODE, filename: overlap("a/sub/index.ts"), errors: claimedBy("#a, #a-sub") },
-    { code: CODE, filename: overlap("a/sub/deep/y.ts"), errors: claimedBy("#a, #a-sub") },
-
     // two folder aliases with the same target
-    { code: CODE, filename: overlap("c/x.ts"), errors: claimedBy("#c, #c2") },
-
-    // a file alias inside a folder alias
-    { code: CODE, filename: overlap("d/file.ts"), errors: claimedBy("#d, #d-file") },
+    { code: CODE, filename: overlap("c/x.ts"), errors: ownedBy("#c, #c2") },
+    { code: CODE, filename: overlap("c/index.ts"), errors: ownedBy("#c, #c2") },
+    { code: CODE, filename: overlap("c/sub/y.ts"), errors: ownedBy("#c, #c2") },
 
     // two file aliases with the same target
-    { code: CODE, filename: overlap("e.ts"), errors: claimedBy("#e, #e2") },
+    { code: CODE, filename: overlap("e.ts"), errors: ownedBy("#e, #e2") },
   ],
 });
 
@@ -66,13 +58,13 @@ function importing(specifier: string, filename: string): { code: string; filenam
 }
 
 testRule("no-relative-bypass", rule("no-relative-bypass"), {
-  // d/file.ts is claimed by #d too, so d/ is not outside its area
-  valid: [importing("./x.ts", overlap("d/file.ts")), importing("./sub/y.ts", overlap("d/file.ts"))],
+  // c/x.ts is owned by both #c and #c2, so c/ is inside either area
+  valid: [importing("./y.ts", overlap("c/x.ts")), importing("./sub/y.ts", overlap("c/x.ts"))],
   invalid: [],
 });
 
 testRule("prefer-alias-import", rule("prefer-alias-import"), {
-  // d/index.ts is #d's own entry point, left to enforce-layer-order
-  valid: [importing("./index.ts", overlap("d/file.ts"))],
+  // c/index.ts is the own entry point of both, left to enforce-layer-order
+  valid: [importing("./index.ts", overlap("c/x.ts"))],
   invalid: [],
 });

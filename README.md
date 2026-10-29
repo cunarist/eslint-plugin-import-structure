@@ -85,8 +85,8 @@ An alias owns its target, and code outside the owned area reaches it only throug
 The rules never depend on folder or file names; an alias may point anywhere.
 
 - An alias to a folder's `index` file (`index.ts`, or any other extension) owns that folder and everything below it. An alias to any other file owns only that file.
-- No file may be owned by 2 aliases: no alias inside another alias's area, and no 2 aliases with the same target.
-  `enforce-layer-order` reports an overlap once at the top of every file 2 aliases claim, since lint cannot report on `package.json`.
+- An alias may sit inside another alias's area. The deeper alias owns its part, carved out of the outer area, and the outer alias owns the rest; the two are ordered like any other pair of aliases.
+- No 2 aliases may have the same area, such as the same target or 2 `index` files in one folder. `enforce-layer-order` reports an overlap once at the top of every file both own, since lint cannot report on `package.json`.
 - Outside an area, any other route to an owned file is a bypass: a deeper alias specifier such as `#a/one.ts` (`no-barrel-bypass`), or a relative path (`no-relative-bypass`, and `prefer-alias-import`, which rewrites a path to the alias's exact target).
 - Inside an area, relative imports of siblings and subfolders are free.
 - `../` is banned in every file, owned or not (`no-parent-import`). Anything above a file needs an alias.
@@ -95,7 +95,8 @@ The rules never depend on folder or file names; an alias may point anywhere.
 
 ```jsonc
 "imports": {
-  "#a": "./a/index.ts", // owns a/ and everything below it
+  "#a": "./a/index.ts", // owns a/ and everything below it but a/sub/
+  "#a-sub": "./a/sub/index.ts", // owns a/sub/, carved out of #a
   "#f": "./b/f.ts", // owns only b/f.ts; b/g.ts stays unowned
 }
 ```
@@ -108,7 +109,9 @@ import { f } from "./b/f.ts"; // ❌ relative path to a file alias; use "#f"
 import { g } from "./b/g.ts"; // ✅ unowned
 // in a/one.ts, owned by #a
 import { two } from "./two.ts"; // ✅ sibling
-import { deep } from "./sub/deep.ts"; // ✅ subfolder of the same area
+import { deep } from "./other/deep.ts"; // ✅ subfolder of the same area
+import { sub } from "./sub/x.ts"; // ❌ relative path into #a-sub
+import { sub } from "#a/sub/x.ts"; // ❌ deeper alias specifier; use "#a-sub"
 ```
 
 The other rules (import order, duplicate sources, wildcards, absolute paths, self-imports) are not about aliases and apply to every file.

@@ -29,6 +29,14 @@ testRule("prefer-alias-import", preferAliasImportRule, {
       ],
     },
 
+    // rewrites a path from an outer area to an alias nested in it
+    {
+      code: 'import { s } from "./sub/index.ts";\n',
+      filename: fixture("nested/a/x.ts"),
+      output: 'import { s } from "#a-sub";\n',
+      errors: [{ messageId: "useAlias", data: { specifier: "./sub/index.ts", alias: "#a-sub" } }],
+    },
+
     // rewrites a same-folder sibling that is a file alias
     {
       code: 'import { s } from "./app-store.ts";\n',

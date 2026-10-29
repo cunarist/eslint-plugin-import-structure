@@ -1,0 +1,17 @@
+{
+  "imports": {
+    "#a": "./a/index.ts",
+    "#a-sub": "./a/sub/index.ts",
+    "#d": "./d/index.ts",
+    "#d-file": "./d/file.ts",
+    "#e-sub": "./e/sub/index.ts",
+    "#e": "./e/index.ts",
+    "#g": "./g/index.ts",
+    "#g-mid": "./g/mid/index.ts",
+    "#g-mid-in": "./g/mid/in/index.ts",
+    "#f": "./f/index.ts",
+    "#f/*": "./f/lib/*",
+    "#f-lib": "./f/lib/index.ts",
+    "#f-sub": "./f/sub/index.ts"
+  }
+}

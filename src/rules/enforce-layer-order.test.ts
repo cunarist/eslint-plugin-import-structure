@@ -47,6 +47,10 @@ testRule("enforce-layer-order", enforceLayerOrderRule, {
     // never fires for a "#" specifier the nearest package.json lacks
     upwardCode,
 
+    // an alias inside another's area owns its part, so it is no overlap
+    { code: "export const x = 1;\n", filename: fixture("nested/a/sub/x.ts") },
+    { code: 'import { s } from "#a-sub";\n', filename: fixture("nested/a/x.ts") },
+
     // stops at the nearest package.json, like Node.js, even without imports
     { code: upwardCode, filename: fixture("src/utils/vendored/index.ts") },
   ],
@@ -89,11 +93,18 @@ testRule("enforce-layer-order", enforceLayerOrderRule, {
       errors: [upward("#components")],
     },
 
-    // reports once at the top of a file two aliases claim
+    // reports once at the top of a file two aliases with the same area own
     {
       code: "export const x = 1;\n",
-      filename: fixture("overlap/a/sub/x.ts"),
-      errors: [{ messageId: "overlap", data: { aliases: "#a, #a-sub" }, line: 1, column: 1 }],
+      filename: fixture("overlap/c/x.ts"),
+      errors: [{ messageId: "overlap", data: { aliases: "#c, #c2" }, line: 1, column: 1 }],
+    },
+
+    // orders an alias inside another's area like any other pair
+    {
+      code: 'import { a } from "#a";\n',
+      filename: fixture("nested/a/sub/x.ts"),
+      errors: [{ messageId: "upward", data: { owner: "#a-sub", target: "#a" } }],
     },
 
     // rejects a module importing its own entry point, by alias or by path

@@ -27,10 +27,13 @@ detectable, and the `imports` map doubles as documentation of the layers.
   extension, owns its whole folder; an alias to any other file, `mod.ts`
   included, owns only that file. Aliases may point anywhere. Files no alias
   owns are never checked (see [Modules](../../README.md#modules)).
-- No file may be owned by 2 aliases: no alias inside another alias's area,
-  and no 2 aliases with the same target. Lint cannot report on
-  `package.json`, so an overlap fires once at the top of every file that 2
-  aliases claim, naming them. Merge the aliases, or move the files apart.
+- An alias may sit inside another alias's area. The deeper alias owns its
+  part, carved out of the outer area, and the outer alias owns the rest.
+  The two are ordered like any other pair of aliases.
+- No 2 aliases may have the same area, such as the same target or 2
+  `index` files in one folder. Lint cannot report on `package.json`, so an
+  overlap fires once at the top of every file the 2 aliases own, naming
+  them. Merge the aliases.
 - A target is resolved whether it is written as an exact alias, a deeper
   specifier such as `#components/x.ts`, or a relative path to an alias's
   target.
@@ -47,10 +50,16 @@ import { Button } from "#components";
 import { helper } from "#utils";
 ```
 
+```ts
+// "#utils": "./src/utils/index.ts", "#utils-sub": "./src/utils/sub/index.ts"
+// in ./src/utils/sub/x.ts, owned by #utils-sub, declared below #utils
+import { helper } from "#utils";
+```
+
 ```jsonc
-// every file in src/utils/sub/ is owned by both
+// every file in src/utils/ is owned by both
 "#utils": "./src/utils/index.ts",
-"#utils-sub": "./src/utils/sub/index.ts"
+"#helpers": "./src/utils/index.ts"
 ```
 
 Examples of **correct** code for this rule:
@@ -59,6 +68,8 @@ Examples of **correct** code for this rule:
 // in ./src/utils/format.ts
 import type { User } from "#types";
 import { helper } from "./helper.ts";
+// in ./src/utils/x.ts, owned by #utils, declared above #utils-sub
+import { sub } from "#utils-sub";
 ```
 
 ## When Not To Use It
