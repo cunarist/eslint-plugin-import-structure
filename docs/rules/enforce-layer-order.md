@@ -31,8 +31,9 @@ detectable, and the `imports` map doubles as documentation of the layers.
   part, carved out of the outer area, and the outer alias owns the rest.
   The two are ordered like any other pair of aliases.
 - No 2 aliases may have the same area, such as the same target or 2
-  `index` files in one folder. Lint cannot report on `package.json`, so an overlap fires once at
-  the top of every file the 2 aliases own, naming them. Merge the aliases.
+  `index` files in one folder. Lint cannot report on `package.json`, so an
+  overlap fires once at the top of every file the 2 aliases own, naming
+  them. Merge the aliases.
 - A target is resolved whether it is written as an exact alias, a deeper
   specifier such as `#components/x.ts`, or a relative path to an alias's
   target.
