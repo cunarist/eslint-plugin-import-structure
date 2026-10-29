@@ -27,7 +27,8 @@ the alias.
 - A path to an alias's target, in any spelling TypeScript resolves to it
   (such as `.js` for `.ts`, or no extension), is left to
   [`prefer-alias-import`](prefer-alias-import.md), which rewrites it.
-- `../`, `#`, and package specifiers are left to other rules.
+- Specifiers with a `..` segment (such as `../x.ts` or `./sub/../x.ts`),
+  `#`, and package specifiers are left to other rules.
 - See [Modules](../../README.md#modules) for the whole rule.
 
 Examples of **incorrect** code for this rule:

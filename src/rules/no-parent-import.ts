@@ -15,9 +15,9 @@ import {
 
 /**
  * `no-parent-import` - rejects `../` specifiers, and any relative specifier
- * with a `..` segment, in every file, owned by an
- * alias or not, rewriting one to its `#` alias where `package.json` declares
- * an alias for that file, in any spelling TypeScript resolves to it.
+ * with a `..` segment, in every file, owned by an alias or not, rewriting
+ * one to its `#` alias where `package.json` declares an alias for that file,
+ * in any spelling TypeScript resolves to it.
  *
  * Reaching up and back down couples two files through their layout instead
  * of a name. Anything above a file is reached through an alias.

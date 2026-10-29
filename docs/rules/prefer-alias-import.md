@@ -29,7 +29,8 @@ lets a path sidestep the layer order of
 - A path to the importing file's own area entry point is left to
   `enforce-layer-order`, since switching to the alias would not fix it.
 - A path to another file inside an area is left to
-  [`no-relative-bypass`](no-relative-bypass.md), and `../` specifiers to
+  [`no-relative-bypass`](no-relative-bypass.md), and any specifier with a
+  `..` segment, such as `../x.ts` or `./sub/../x.ts`, to
   [`no-parent-import`](no-parent-import.md), which offers the same rewrite.
 
 Examples of **incorrect** code for this rule:
