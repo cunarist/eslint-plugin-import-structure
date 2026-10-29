@@ -19,7 +19,8 @@ lets a path sidestep the layer order of
 - A `./` specifier fires when an alias points at exactly the resolved file
   and the importing file lies outside that alias's area, a same-folder
   sibling of a file alias included. The fix swaps in the alias, keeping the
-  quote style.
+  quote style. The target counts as named with its own extension, another
+  script extension, or none, so `./b/f.js` and `./b/f` both name `b/f.ts`.
 - A path to the importing file's own area entry point is left to
   `enforce-layer-order`, since switching to the alias would not fix it.
 - A path to another file inside an area is left to

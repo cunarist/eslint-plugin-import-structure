@@ -13,6 +13,7 @@ import {
   isInModuleScope,
   isOwnedBy,
   type ModuleEntry,
+  namesSameModule,
   normalizePath,
   parentDir,
   quoteLike,
@@ -36,7 +37,7 @@ function relativeSpecifier(
 ): string | null {
   const path = deeperAliasPath(config, specifier);
   const importer = normalizePath(filename);
-  if (path === null || path === owner.target || path === importer) {
+  if (path === null || namesSameModule(path, owner.target) || namesSameModule(path, importer)) {
     return null;
   }
   const relative = childSpecifier(parentDir(importer), path);

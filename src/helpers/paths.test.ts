@@ -4,6 +4,7 @@ import {
   baseName,
   childSpecifier,
   isInsideDir,
+  namesSameModule,
   normalizePath,
   parentDir,
   resolveFrom,
@@ -75,5 +76,21 @@ describe("childSpecifier", () => {
   it("gives null for a path only ../ could reach", () => {
     expect(childSpecifier("/src/a/sub", "/src/a/x.ts")).toBeNull();
     expect(childSpecifier("/src/a", "/src/ab/x.ts")).toBeNull();
+  });
+});
+
+describe("namesSameModule", () => {
+  it("matches a script extension swapped or dropped", () => {
+    expect(namesSameModule("/a/index.ts", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/index.js", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/index", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/x.y", "/a/x.y.ts")).toBe(true);
+  });
+
+  it("tells apart other extensions, stems, and folders", () => {
+    expect(namesSameModule("/a/index.css", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/a/one.ts", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/b/index.ts", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/a.js/index", "/a/index.ts")).toBe(false);
   });
 });

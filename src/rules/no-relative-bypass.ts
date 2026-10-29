@@ -1,5 +1,6 @@
 import {
   docsUrl,
+  entryAt,
   type ExplicitRule,
   findImportsConfig,
   findOwningEntry,
@@ -16,7 +17,7 @@ import {
  * folder and everything below it, and an alias to any other file owns only
  * that file. Code outside an area reaches it only through the alias. Inside
  * an area, siblings and subfolders are free, and so are files no alias owns.
- * A path to an alias's exact target is left to `prefer-alias-import`, which
+ * A path to an alias's target, in any script extension spelling, is left to `prefer-alias-import`, which
  * rewrites it to the alias.
  */
 export const noRelativeBypassRule: ExplicitRule = {
@@ -40,7 +41,7 @@ export const noRelativeBypassRule: ExplicitRule = {
       }
       const config = findImportsConfig(context.filename);
       const resolved = resolveLocalSpecifier(context.filename, specifier);
-      if (config === null || resolved === null || config.byTarget.has(resolved)) {
+      if (config === null || resolved === null || entryAt(config, resolved) !== null) {
         return;
       }
       const target = findOwningEntry(config, resolved);

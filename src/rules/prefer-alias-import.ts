@@ -2,6 +2,7 @@ import type { RuleTextEdit } from "@eslint/core";
 
 import {
   docsUrl,
+  entryAt,
   type ExplicitRule,
   findImportsConfig,
   isOwnedBy,
@@ -12,7 +13,7 @@ import {
 
 /**
  * `prefer-alias-import` - requires the `#` alias when a `./` specifier names
- * the exact target of an alias from outside that alias's area, a same-folder
+ * the target of an alias, in any script extension spelling, from outside that alias's area, a same-folder
  * sibling included. An alias owns its target, so its target has one spelling
  * everywhere outside it.
  *
@@ -41,8 +42,8 @@ export const preferAliasImportRule: ExplicitRule = {
       }
       const config = findImportsConfig(context.filename);
       const resolved = resolveLocalSpecifier(context.filename, specifier);
-      const entry = resolved === null ? undefined : config?.byTarget.get(resolved);
-      if (config === null || entry === undefined) {
+      const entry = config === null || resolved === null ? null : entryAt(config, resolved);
+      if (config === null || entry === null) {
         return;
       }
       // Reaching the entry point of the importing file's own area is never

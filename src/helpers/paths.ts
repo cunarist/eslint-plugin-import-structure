@@ -92,3 +92,32 @@ export function childSpecifier(fromDir: string, path: string): string | null {
     ? `./${path.slice(fromDir.replace(/\/$/u, "").length + 1)}`
     : null;
 }
+
+/** The extensions of script modules, which a specifier may swap or drop. */
+const SCRIPT_EXTENSIONS: Set<string> = new Set([
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".mts",
+  ".cts",
+  ".jsx",
+  ".tsx",
+]);
+
+/** A path without its last extension when that is a script extension. */
+function withoutScriptExtension(path: string): string {
+  const dot = path.lastIndexOf(".");
+  const isExtension = dot > path.lastIndexOf("/") + 1;
+  return isExtension && SCRIPT_EXTENSIONS.has(path.slice(dot)) ? path.slice(0, dot) : path;
+}
+
+/**
+ * Whether a resolved specifier path names the module file `file`: the same
+ * path, or the same path with a script extension swapped or dropped, as
+ * `nodenext` code writes `./index.js` and bundler code `./index` for
+ * `./index.ts`. Another extension, such as `index.css`, names another file.
+ */
+export function namesSameModule(path: string, file: string): boolean {
+  return path === file || withoutScriptExtension(path) === withoutScriptExtension(file);
+}

@@ -18,8 +18,9 @@ through an alias.
 - Any specifier starting with `../` fires, in every file, whether an alias
   owns it or not, and in every import, re-export, dynamic `import()`, and
   type-level `import("...")`.
-- When the nearest `package.json` has an alias that points at exactly the
-  same file, the fix rewrites the specifier to that alias, keeping the quote
+- When the nearest `package.json` has an alias that points at the same
+  file, spelled with its own extension, another script extension, or none,
+  the fix rewrites the specifier to that alias, keeping the quote
   style. A backtick specifier becomes a double-quoted one.
 - With no such alias, or when the alias is the importing file's own area,
   the rule reports without a fix. Add an alias, or move the file.

@@ -21,7 +21,7 @@ import {
   SLASHED_DRIVE_PATTERN,
   stripQuery,
 } from "./imports.ts";
-import { isInsideDir, normalizePath, parentDir, resolveFrom } from "./paths.ts";
+import { isInsideDir, namesSameModule, normalizePath, parentDir, resolveFrom } from "./paths.ts";
 
 /**
  * Whether a normalized path lies in the area an alias owns. A folder alias's
@@ -30,7 +30,7 @@ import { isInsideDir, normalizePath, parentDir, resolveFrom } from "./paths.ts";
  */
 function ownsPath(entry: ModuleEntry, path: string): boolean {
   return (
-    entry.target === path ||
+    namesSameModule(path, entry.target) ||
     (entry.isBarrel && (path === entry.dir || isInsideDir(path, entry.dir)))
   );
 }
@@ -228,7 +228,20 @@ export function resolveTarget(
     return null;
   }
   const resolved = resolveFrom(parentDir(normalizePath(filename)), stripQuery(specifier));
-  return config.byTarget.get(resolved) ?? null;
+  return entryAt(config, resolved);
+}
+
+/**
+ * The alias whose target a resolved path names, by its exact path or as
+ * `./index.js` or `./index` names `./index.ts`; the first declared when two
+ * aliases share a target. Returns `null` when the path names no target.
+ */
+export function entryAt(config: ImportsConfig, path: string): ModuleEntry | null {
+  return (
+    config.byTarget.get(path) ??
+    config.entries.find((entry) => namesSameModule(path, entry.target)) ??
+    null
+  );
 }
 
 /** Whether a path lies in the area some alias owns. */

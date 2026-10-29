@@ -8,6 +8,7 @@ import {
   findOwningEntry,
   type ImportsConfig,
   type ModuleEntry,
+  namesSameModule,
   owningEntries,
   resolveTarget,
   stripQuery,
@@ -23,7 +24,8 @@ function namesOwnEntry(config: ImportsConfig, specifier: string, owner: ModuleEn
   if (!specifier.startsWith("#") || config.bySpecifier.has(stripQuery(specifier))) {
     return true;
   }
-  return deeperAliasPath(config, specifier) === owner.target;
+  const path = deeperAliasPath(config, specifier);
+  return path !== null && namesSameModule(path, owner.target);
 }
 
 /**
