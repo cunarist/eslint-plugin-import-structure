@@ -37,7 +37,7 @@ export const enforceLayerOrderRule: ExplicitRule = {
       upward:
         "'{{owner}}' must not import '{{target}}', which is declared above it in package.json.",
       overlap:
-        "This file is owned by more than one alias with the same target in package.json: {{aliases}}.",
+        "This file is owned by more than one alias with the same area in package.json: {{aliases}}.",
     },
   },
   create(context) {

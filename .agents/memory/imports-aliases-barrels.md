@@ -22,10 +22,12 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   owner, the alias with the deepest area holding it (`owningEntries` /
   `findOwningEntry` in `src/helpers/modules.ts`). So `./sub/x.ts` from the
   outer area is a bypass, `#a/sub/x.ts` reaches past `#a-sub`
-  (`deeperAliasOwner` reads the rest of the specifier as a path in the
-  prefix alias's folder), and parent/child obey the layer order like any
+  (`deeperAliasOwner` credits the owner of the file the specifier names:
+  through a matching `/*` pattern if any, else the rest read as a path in
+  the prefix alias's folder, even one that climbs out of it), and parent/child obey the layer order like any
   other pair.
-- **No 2 aliases on the same area** (same target). `enforce-layer-order`
+- **No 2 aliases on the same area** (same target, or 2 index files in one
+  folder). `enforce-layer-order`
   reports it once at the top of every file both own; other rules count the
   file as inside both. Fix by merging the aliases.
 - **Outside an area, only the exact alias reaches it.** A deeper alias

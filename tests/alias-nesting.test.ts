@@ -171,9 +171,9 @@ testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
     { ...importing("#a/sub", MAIN), errors: [deeper("#a/sub", "#a-sub")] },
     { ...importing("#d/file.ts", MAIN), errors: [deeper("#d/file.ts", "#d-file")] },
 
-    // the rest of the outer area, and a path that climbs out of it
+    // the rest of the outer area, and a path that climbs out into another
     { ...importing("#a/x.ts", MAIN), errors: [deeper("#a/x.ts", "#a")] },
-    { ...importing("#a/../d/x.ts", MAIN), errors: [deeper("#a/../d/x.ts", "#a")] },
+    { ...importing("#a/../d/x.ts", MAIN), errors: [deeper("#a/../d/x.ts", "#d")] },
     { ...importing("#a-sub/x.ts", MAIN), errors: [deeper("#a-sub/x.ts", "#a-sub")] },
   ],
 });

@@ -18,7 +18,7 @@ the alias.
 - A `./` specifier fires when it lands in an area the importing file is not
   in. It names the alias to import instead. A folder alias's area includes
   the folder path itself, so a directory specifier such as `./a` fires too.
-- A file 2 aliases with the same target own counts as inside both areas,
+- A file 2 aliases with the same area own counts as inside both areas,
   so only `enforce-layer-order` reports the overlap.
 - Inside an area, siblings and subfolders at any depth are free, except
   those inside a deeper alias's area, which are reached through that alias.

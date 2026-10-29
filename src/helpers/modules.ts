@@ -78,10 +78,12 @@ export function findOwningEntry(config: ImportsConfig, filePath: string): Module
 /**
  * The exact alias a deeper `#` specifier reaches past, such as `#utils` for
  * `#utils/internal.ts`, whether or not a subpath pattern makes it resolve.
- * The longest alias prefix wins, and when it names a folder alias, the rest
- * of the specifier is read as a path in that folder, so `#a/sub/x.ts` reaches
- * past `#a-sub` when that alias owns `a/sub/`. Returns `null` when no alias
- * is a prefix.
+ * It is the owner of the file the specifier names: the file a matching
+ * subpath pattern resolves to, or else, under a folder alias prefix, the rest
+ * of the specifier read as a path in that folder. So `#a/sub/x.ts` reaches
+ * past `#a-sub` when that alias owns `a/sub/`. A named file no alias owns
+ * falls back to the longest alias prefix. Returns `null` when no alias is a
+ * prefix.
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   let best: ModuleEntry | null = null;
@@ -93,16 +95,37 @@ export function deeperAliasOwner(config: ImportsConfig, specifier: string): Modu
       best = entry;
     }
   }
-  if (best === null || !best.isBarrel) {
-    return best;
+  if (best === null) {
+    return null;
   }
-  const rest = specifier.slice(best.specifier.length + 1).replace(QUERY_PATTERN, "");
-  const path = resolveFrom(best.dir, `./${rest}`);
-  // A path that climbs out of the folder names nothing the prefix owns.
-  if (!isInsideDir(path, best.dir)) {
-    return best;
+  const path = namedPath(config, specifier, best);
+  return (path === null ? null : findOwningEntry(config, path)) ?? best;
+}
+
+/**
+ * The file a deeper `#` specifier names under the alias prefix `prefix`:
+ * where a subpath pattern sends it, or else, for a folder alias, the rest of
+ * the specifier read as a path in that folder. Returns `null` when neither
+ * applies.
+ */
+function namedPath(config: ImportsConfig, specifier: string, prefix: ModuleEntry): string | null {
+  const pattern = findPatternEntry(config, specifier);
+  if (pattern !== null) {
+    return patternPath(config, pattern, specifier);
   }
-  return findOwningEntry(config, path) ?? best;
+  if (!prefix.isBarrel) {
+    return null;
+  }
+  const rest = specifier.slice(prefix.specifier.length + 1).replace(QUERY_PATTERN, "");
+  return resolveFrom(prefix.dir, `./${rest}`);
+}
+
+/** The file a subpath pattern resolves a `#` specifier matching it to. */
+function patternPath(config: ImportsConfig, pattern: PatternEntry, specifier: string): string {
+  const matched = specifier
+    .slice(pattern.prefix.length, specifier.length - pattern.suffix.length)
+    .replace(QUERY_PATTERN, "");
+  return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
 }
 
 /**
@@ -163,13 +186,7 @@ export function resolveLocalSpecifier(filename: string, specifier: string): stri
     return exact.target;
   }
   const pattern = findPatternEntry(config, specifier);
-  if (pattern === null) {
-    return null;
-  }
-  const matched = specifier
-    .slice(pattern.prefix.length, specifier.length - pattern.suffix.length)
-    .replace(QUERY_PATTERN, "");
-  return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
+  return pattern === null ? null : patternPath(config, pattern, specifier);
 }
 
 /**

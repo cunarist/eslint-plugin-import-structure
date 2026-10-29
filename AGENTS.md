@@ -60,7 +60,7 @@ and follow it before reasoning or responding.
 - Aliases follow one rule, with no folder names in it: an alias owns its
   target (a folder's `index.ts` owns that folder and everything below it;
   any other file owns only itself) minus the area of any deeper alias
-  inside it, 2 aliases with the same target are an error, code
+  inside it, 2 aliases with the same area are an error, code
   outside an area reaches it only through the exact alias, relative imports
   inside an area are free, and `../` is banned in every file. This repo's
   aliases, in layer order (`enforce-layer-order`): `#plugin`, `#rules`,

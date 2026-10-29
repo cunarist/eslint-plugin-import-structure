@@ -93,7 +93,7 @@ testRule("enforce-layer-order", enforceLayerOrderRule, {
       errors: [upward("#components")],
     },
 
-    // reports once at the top of a file two aliases with the same target own
+    // reports once at the top of a file two aliases with the same area own
     {
       code: "export const x = 1;\n",
       filename: fixture("overlap/c/x.ts"),

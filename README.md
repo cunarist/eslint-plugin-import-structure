@@ -86,7 +86,7 @@ The rules never depend on folder or file names; an alias may point anywhere.
 
 - An alias to a folder's `index` file (`index.ts`, or any other extension) owns that folder and everything below it. An alias to any other file owns only that file.
 - An alias may sit inside another alias's area. The deeper alias owns its part, carved out of the outer area, and the outer alias owns the rest; the two are ordered like any other pair of aliases.
-- No 2 aliases may have the same target. `enforce-layer-order` reports an overlap once at the top of every file both own, since lint cannot report on `package.json`.
+- No 2 aliases may have the same area, such as the same target or 2 `index` files in one folder. `enforce-layer-order` reports an overlap once at the top of every file both own, since lint cannot report on `package.json`.
 - Outside an area, any other route to an owned file is a bypass: a deeper alias specifier such as `#a/one.ts` (`no-barrel-bypass`), or a relative path (`no-relative-bypass`, and `prefer-alias-import`, which rewrites a path to the alias's exact target).
 - Inside an area, relative imports of siblings and subfolders are free.
 - `../` is banned in every file, owned or not (`no-parent-import`). Anything above a file needs an alias.
