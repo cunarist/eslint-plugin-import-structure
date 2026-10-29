@@ -16,14 +16,21 @@ spelling, which hides the dependency from anyone searching for the alias and
 lets a path sidestep the layer order of
 [`enforce-layer-order`](enforce-layer-order.md).
 
-- A `./` specifier fires when an alias points at exactly the resolved file
+- A `./` specifier fires when an alias points at the resolved file
   and the importing file lies outside that alias's area, a same-folder
   sibling of a file alias included. The fix swaps in the alias, keeping the
-  quote style.
+  quote style. The target counts as named in any spelling TypeScript
+  resolves to it: its own extension, the output one (`.js` for `.ts` or
+  `.tsx`, `.jsx` for `.tsx`, `.mjs` for `.mts`, `.cjs` for `.cts`), or none
+  for a `.ts`, `.tsx`, `.js`, or `.jsx` file. So `./b/f.js` and `./b/f`
+  both name `b/f.ts`, but `./b/f.mts` names another file.
+  A specifier with a query or fragment, such as `./b/f.ts?raw`, is reported
+  without a fix, since the alias cannot carry it.
 - A path to the importing file's own area entry point is left to
   `enforce-layer-order`, since switching to the alias would not fix it.
 - A path to another file inside an area is left to
-  [`no-relative-bypass`](no-relative-bypass.md), and `../` specifiers to
+  [`no-relative-bypass`](no-relative-bypass.md), and any specifier with a
+  `..` segment, such as `../x.ts` or `./sub/../x.ts`, to
   [`no-parent-import`](no-parent-import.md), which offers the same rewrite.
 
 Examples of **incorrect** code for this rule:

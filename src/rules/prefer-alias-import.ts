@@ -2,19 +2,22 @@ import type { RuleTextEdit } from "@eslint/core";
 
 import {
   docsUrl,
+  entryAt,
   type ExplicitRule,
   findImportsConfig,
   isOwnedBy,
+  isParentSpecifier,
   quoteLike,
   resolveLocalSpecifier,
+  stripQuery,
   visitSpecifiers,
 } from "#helpers";
 
 /**
  * `prefer-alias-import` - requires the `#` alias when a `./` specifier names
- * the exact target of an alias from outside that alias's area, a same-folder
- * sibling included. An alias owns its target, so its target has one spelling
- * everywhere outside it.
+ * the target of an alias, in any spelling TypeScript resolves to it, from
+ * outside that alias's area, a same-folder sibling included. An alias owns
+ * its target, so its target has one spelling everywhere outside it.
  *
  * One spelling per module keeps `package.json` `imports` the single source of
  * truth, and keeps the layer rules from being sidestepped by a path.
@@ -36,13 +39,13 @@ export const preferAliasImportRule: ExplicitRule = {
     return visitSpecifiers((node, specifier) => {
       // Parent specifiers are banned outright by "no-parent-import", which
       // already offers this same rewrite.
-      if (!specifier.startsWith("./")) {
+      if (!specifier.startsWith("./") || isParentSpecifier(specifier)) {
         return;
       }
       const config = findImportsConfig(context.filename);
       const resolved = resolveLocalSpecifier(context.filename, specifier);
-      const entry = resolved === null ? undefined : config?.byTarget.get(resolved);
-      if (config === null || entry === undefined) {
+      const entry = config === null || resolved === null ? null : entryAt(config, resolved);
+      if (config === null || entry === null) {
         return;
       }
       // Reaching the entry point of the importing file's own area is never
@@ -54,7 +57,12 @@ export const preferAliasImportRule: ExplicitRule = {
         node,
         messageId: "useAlias",
         data: { specifier, alias: entry.specifier },
-        fix: (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier)),
+        // A query or fragment changes what is imported, and the alias cannot
+        // carry one, so such a specifier is reported without a fix.
+        fix:
+          stripQuery(specifier) === specifier
+            ? (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier))
+            : null,
       });
     });
   },

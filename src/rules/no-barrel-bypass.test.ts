@@ -82,12 +82,48 @@ testRule("no-barrel-bypass", noBarrelBypassRule, {
       ],
     },
 
-    // rejects a catch-all pattern, which has no entry point to suggest
+    // credits a catch-all pattern to the owner of the file it resolves to
     {
       code: 'import { utils } from "#/utils/index.ts";\n',
       filename: APP_STORE,
       errors: [
-        { messageId: "internals", data: { specifier: "#/utils/index.ts" }, suggestions: [] },
+        {
+          messageId: "bypass",
+          data: { specifier: "#/utils/index.ts", owner: "#utils" },
+          suggestions: [
+            {
+              messageId: "useEntry",
+              data: { owner: "#utils" },
+              output: 'import { utils } from "#utils";\n',
+            },
+          ],
+        },
+      ],
+    },
+
+    // rejects a pattern into files no alias owns, with nothing to suggest
+    {
+      code: 'import { other } from "#/other.ts";\n',
+      filename: APP_STORE,
+      errors: [{ messageId: "internals", data: { specifier: "#/other.ts" }, suggestions: [] }],
+    },
+
+    // never suggests the importing file's own alias, only a relative path
+    {
+      code: bypassCode,
+      filename: fixture("src/components/button.ts"),
+      errors: [
+        {
+          messageId: "ownArea",
+          data: { specifier: "#components/internal.ts", owner: "#components" },
+          suggestions: [
+            {
+              messageId: "useRelative",
+              data: { path: "./internal.ts" },
+              output: 'import { internal } from "./internal.ts";\n',
+            },
+          ],
+        },
       ],
     },
 

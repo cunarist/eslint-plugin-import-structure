@@ -4,6 +4,17 @@
     "#f": "./b/f.ts",
     "#deep": "./src/x/y/index.ts",
     "#tool": "./tools/lint.ts",
-    "#gen": "./build/generated.ts"
+    "#gen": "./build/generated.ts",
+    "#xt": "./c/x.tsx",
+    "#x": "./c/x.ts",
+    "#pat/*": "./a/*",
+    "#pat/*.js": "./a/*.ts",
+    "#pat/ext/*": "ext-pkg/*",
+    "#pat/cond/*": {
+      "default": "./vendor/*"
+    },
+    "#pat/dep": "dep-pkg",
+    "#lib/*": "./b/*",
+    "#tool/*": "./vendor/*"
   }
 }

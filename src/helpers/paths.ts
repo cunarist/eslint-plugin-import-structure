@@ -81,3 +81,65 @@ export function resolveFrom(baseDir: string, relative: string): string {
 export function isInsideDir(path: string, dir: string): boolean {
   return path.startsWith(dir.endsWith("/") ? dir : `${dir}/`);
 }
+
+/**
+ * The `./` specifier from a directory to a path inside it, such as
+ * `./sub/x.ts`. Returns `null` for a path outside the directory, which only
+ * a banned `../` specifier could reach.
+ */
+export function childSpecifier(fromDir: string, path: string): string | null {
+  return isInsideDir(path, fromDir)
+    ? `./${path.slice(fromDir.replace(/\/$/u, "").length + 1)}`
+    : null;
+}
+
+/** The extensions a specifier without one may resolve to, in TypeScript's order. */
+const BARE_EXTENSIONS: string[] = [".ts", ".tsx", ".js", ".jsx"];
+
+/**
+ * The source extensions a specifier's extension stands for, in the order
+ * TypeScript tries them: `./x.js` names `x.ts`, then `x.tsx`, and so on.
+ */
+const SOURCE_EXTENSIONS: Map<string, string[]> = new Map([
+  [".js", [".ts", ".tsx"]],
+  [".jsx", [".tsx"]],
+  [".mjs", [".mts"]],
+  [".cjs", [".cts"]],
+  [".ts", []],
+  [".tsx", []],
+  [".mts", []],
+  [".cts", []],
+]);
+
+/** The last extension of a path's last segment, or `""` when it has none. */
+function extensionOf(path: string): string {
+  const dot = path.lastIndexOf(".");
+  return dot > path.lastIndexOf("/") + 1 ? path.slice(dot) : "";
+}
+
+/**
+ * The files a resolved specifier path may name, in the order TypeScript
+ * tries them: the path itself, then the source files of a script extension
+ * (`./x.js` gives `x.ts` and `x.tsx`, `./x.mjs` gives `x.mts`), or, for a
+ * path without a script extension, the path with `.ts`, `.tsx`, `.js`, or
+ * `.jsx` added.
+ */
+export function moduleCandidates(path: string): string[] {
+  const extension = extensionOf(path);
+  const sources = SOURCE_EXTENSIONS.get(extension);
+  if (sources === undefined) {
+    return [path, ...BARE_EXTENSIONS.map((added) => path + added)];
+  }
+  const stem = path.slice(0, path.length - extension.length);
+  return [path, ...sources.map((source) => stem + source)];
+}
+
+/**
+ * Whether a resolved specifier path names the module file `file`, the way
+ * TypeScript resolves it (`moduleCandidates`). One-directional: `./x.mts`
+ * never names `x.ts`, and another extension, such as `index.css`, names
+ * another file.
+ */
+export function namesSameModule(path: string, file: string): boolean {
+  return moduleCandidates(path).includes(file);
+}

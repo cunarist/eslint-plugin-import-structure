@@ -1,9 +1,11 @@
 import {
   docsUrl,
+  entryAt,
   type ExplicitRule,
   findImportsConfig,
   findOwningEntry,
   isOwnedBy,
+  isParentSpecifier,
   resolveLocalSpecifier,
   visitSpecifiers,
 } from "#helpers";
@@ -16,8 +18,8 @@ import {
  * folder and everything below it, and an alias to any other file owns only
  * that file. Code outside an area reaches it only through the alias. Inside
  * an area, siblings and subfolders are free, and so are files no alias owns.
- * A path to an alias's exact target is left to `prefer-alias-import`, which
- * rewrites it to the alias.
+ * A path to an alias's target, in any spelling TypeScript resolves to it, is
+ * left to `prefer-alias-import`, which rewrites it to the alias.
  */
 export const noRelativeBypassRule: ExplicitRule = {
   meta: {
@@ -35,12 +37,12 @@ export const noRelativeBypassRule: ExplicitRule = {
     return visitSpecifiers((node, specifier) => {
       // Parent imports belong to "no-parent-import", and bare or "#"
       // specifiers never walk the file tree.
-      if (!specifier.startsWith("./")) {
+      if (!specifier.startsWith("./") || isParentSpecifier(specifier)) {
         return;
       }
       const config = findImportsConfig(context.filename);
       const resolved = resolveLocalSpecifier(context.filename, specifier);
-      if (config === null || resolved === null || config.byTarget.has(resolved)) {
+      if (config === null || resolved === null || entryAt(config, resolved) !== null) {
         return;
       }
       const target = findOwningEntry(config, resolved);

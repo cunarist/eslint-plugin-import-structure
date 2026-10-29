@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { baseName, isInsideDir, normalizePath, parentDir, resolveFrom, stemName } from "./paths.ts";
+import {
+  baseName,
+  childSpecifier,
+  isInsideDir,
+  moduleCandidates,
+  namesSameModule,
+  normalizePath,
+  parentDir,
+  resolveFrom,
+  stemName,
+} from "./paths.ts";
 
 describe("normalizePath", () => {
   it("converts Windows backslashes to forward slashes", () => {
@@ -55,5 +65,57 @@ describe("isInsideDir", () => {
     expect(isInsideDir("/src/utils/a.ts", "/src/utils")).toBe(true);
     expect(isInsideDir("/src/utils-extra/a.ts", "/src/utils")).toBe(false);
     expect(isInsideDir("/src/utils/a.ts", "/src/utils/")).toBe(true);
+  });
+});
+
+describe("childSpecifier", () => {
+  it("spells a path inside a directory with ./", () => {
+    expect(childSpecifier("/src/a", "/src/a/sub/x.ts")).toBe("./sub/x.ts");
+    expect(childSpecifier("/src/a/", "/src/a/x.ts")).toBe("./x.ts");
+  });
+
+  it("gives null for a path only ../ could reach", () => {
+    expect(childSpecifier("/src/a/sub", "/src/a/x.ts")).toBeNull();
+    expect(childSpecifier("/src/a", "/src/ab/x.ts")).toBeNull();
+  });
+});
+
+describe("namesSameModule", () => {
+  it("matches the spellings TypeScript resolves to a file", () => {
+    expect(namesSameModule("/a/index.ts", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/index.js", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/index", "/a/index.ts")).toBe(true);
+    expect(namesSameModule("/a/x.y", "/a/x.y.ts")).toBe(true);
+    expect(namesSameModule("/b/f.mjs", "/b/f.mts")).toBe(true);
+    expect(namesSameModule("/b/f.cjs", "/b/f.cts")).toBe(true);
+    expect(namesSameModule("/b/f.js", "/b/f.tsx")).toBe(true);
+    expect(namesSameModule("/b/f.jsx", "/b/f.tsx")).toBe(true);
+  });
+
+  it("tells apart other module kinds, extensions, stems, and folders", () => {
+    expect(namesSameModule("/b/f.mts", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.tsx", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.cjs", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.ts", "/b/f.js")).toBe(false);
+    expect(namesSameModule("/b/f", "/b/f.mts")).toBe(false);
+    expect(namesSameModule("/a/index.css", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/a/one.ts", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/b/index.ts", "/a/index.ts")).toBe(false);
+    expect(namesSameModule("/a.js/index", "/a/index.ts")).toBe(false);
+  });
+});
+
+describe("moduleCandidates", () => {
+  it("lists the files a specifier may name in TypeScript's order", () => {
+    expect(moduleCandidates("/c/x")).toStrictEqual([
+      "/c/x",
+      "/c/x.ts",
+      "/c/x.tsx",
+      "/c/x.js",
+      "/c/x.jsx",
+    ]);
+    expect(moduleCandidates("/c/x.js")).toStrictEqual(["/c/x.js", "/c/x.ts", "/c/x.tsx"]);
+    expect(moduleCandidates("/c/x.mjs")).toStrictEqual(["/c/x.mjs", "/c/x.mts"]);
+    expect(moduleCandidates("/c/x.ts")).toStrictEqual(["/c/x.ts"]);
   });
 });

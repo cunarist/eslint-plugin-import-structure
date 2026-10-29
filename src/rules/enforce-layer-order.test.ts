@@ -23,6 +23,10 @@ function ownEntry(specifier: string): {
 
 testRule("enforce-layer-order", enforceLayerOrderRule, {
   valid: [
+    // leaves a deeper specifier to another file of the own area to no-barrel-bypass
+    { code: 'import { x } from "#components/button.ts";\n', filename: INTERNAL },
+    { code: 'import { x } from "#utils/x.ts";\n', filename: fixture("src/utils/format.ts") },
+
     // allows importing modules declared below
     {
       code: 'import { utils } from "#utils";\nimport type { Thing } from "#types";\n',
@@ -109,6 +113,18 @@ testRule("enforce-layer-order", enforceLayerOrderRule, {
 
     // rejects a module importing its own entry point, by alias or by path
     { code: upwardCode, filename: INTERNAL, errors: [ownEntry("#components")] },
+
+    // and by a deeper specifier naming it, through a pattern or a folder alias
+    {
+      code: 'import { x } from "#components/index.ts?raw";\n',
+      filename: INTERNAL,
+      errors: [ownEntry("#components/index.ts?raw")],
+    },
+    {
+      code: 'import { x } from "#utils/index.ts";\n',
+      filename: fixture("src/utils/format.ts"),
+      errors: [{ messageId: "ownEntry", data: { owner: "#utils", specifier: "#utils/index.ts" } }],
+    },
     {
       code: 'import { x } from "./index.ts";\n',
       filename: INTERNAL,
