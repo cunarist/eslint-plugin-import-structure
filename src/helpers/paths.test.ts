@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { baseName, isInsideDir, normalizePath, parentDir, resolveFrom, stemName } from "./paths.ts";
+import {
+  baseName,
+  childSpecifier,
+  isInsideDir,
+  normalizePath,
+  parentDir,
+  resolveFrom,
+  stemName,
+} from "./paths.ts";
 
 describe("normalizePath", () => {
   it("converts Windows backslashes to forward slashes", () => {
@@ -55,5 +63,17 @@ describe("isInsideDir", () => {
     expect(isInsideDir("/src/utils/a.ts", "/src/utils")).toBe(true);
     expect(isInsideDir("/src/utils-extra/a.ts", "/src/utils")).toBe(false);
     expect(isInsideDir("/src/utils/a.ts", "/src/utils/")).toBe(true);
+  });
+});
+
+describe("childSpecifier", () => {
+  it("spells a path inside a directory with ./", () => {
+    expect(childSpecifier("/src/a", "/src/a/sub/x.ts")).toBe("./sub/x.ts");
+    expect(childSpecifier("/src/a/", "/src/a/x.ts")).toBe("./x.ts");
+  });
+
+  it("gives null for a path only ../ could reach", () => {
+    expect(childSpecifier("/src/a/sub", "/src/a/x.ts")).toBeNull();
+    expect(childSpecifier("/src/a", "/src/ab/x.ts")).toBeNull();
   });
 });

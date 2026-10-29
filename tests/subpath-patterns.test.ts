@@ -1,0 +1,131 @@
+/**
+ * Regression: a `/*` subpath pattern is credited to the owner of the file it
+ * resolves to, even with no exact alias of the same name and with a query
+ * string after the specifier. So `#pat/x.js?raw` under `"#pat/*.js":
+ * "./a/*.ts"` reaches past `#a`, and the layer order applies to it. Inside
+ * the area, the alias is never suggested; a `./` path is, when one exists.
+ */
+
+import plugin from "#plugin";
+import { type ExpectedError, fixture, type TestedRule, testRule } from "#testing";
+
+/** The published rule with this id. */
+function rule(id: string): TestedRule {
+  const found = plugin.rules?.[id];
+  if (found === undefined) {
+    throw new Error(`no rule named ${id}`);
+  }
+  return found;
+}
+
+/**
+ * A file in the `owned/` fixture project, whose `#pat/*.js` pattern sends
+ * `#pat/x.js` to `a/x.ts`, owned by `#a`, and whose `#lib/*` pattern sends
+ * `#lib/f.ts` to `b/f.ts`, the target of the file alias `#f`.
+ */
+function owned(path: string): string {
+  return fixture(`owned/${path}`);
+}
+
+const MAIN = owned("main.ts");
+
+const ONE = owned("a/one.ts");
+
+const DEEP = owned("a/sub/deep.ts");
+
+const FILE_ALIAS = owned("b/f.ts");
+
+/** One import of `specifier`, linted as `filename`. */
+function importing(specifier: string, filename: string): { code: string; filename: string } {
+  return { code: `import { x } from "${specifier}";\n`, filename };
+}
+
+/** A case that fails with the given errors. */
+interface InvalidCase {
+  code: string;
+  filename: string;
+  errors: ExpectedError[];
+}
+
+/** A deep specifier from outside the area of `owner`, suggesting `owner`. */
+function bypass(specifier: string, owner: string): InvalidCase {
+  return {
+    ...importing(specifier, MAIN),
+    errors: [
+      {
+        messageId: "bypass",
+        data: { specifier, owner },
+        suggestions: [
+          { messageId: "useEntry", data: { owner }, output: `import { x } from "${owner}";\n` },
+        ],
+      },
+    ],
+  };
+}
+
+/** A deep specifier into the importer's own area `#a`, suggesting `path`. */
+function ownArea(specifier: string, filename: string, path: string | null): InvalidCase {
+  return {
+    ...importing(specifier, filename),
+    errors: [
+      {
+        messageId: "ownArea",
+        data: { specifier, owner: "#a" },
+        suggestions:
+          path === null
+            ? []
+            : [
+                {
+                  messageId: "useRelative",
+                  data: { path },
+                  output: `import { x } from "${path}";\n`,
+                },
+              ],
+      },
+    ],
+  };
+}
+
+testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
+  valid: [importing("#a?raw", MAIN), importing("#lib/g.ts", MAIN)],
+  invalid: [
+    // a pattern with no exact alias of its name reaches past the file's owner
+    bypass("#pat/x.js", "#a"),
+    bypass("#lib/f.ts", "#f"),
+
+    // a query string does not stop the pattern from matching
+    bypass("#pat/x.js?raw", "#a"),
+
+    // inside the area, a relative path, never the area's own alias
+    ownArea("#pat/sub/x.js", ONE, "./sub/x.ts"),
+    ownArea("#pat/two.js?raw", ONE, "./two.ts?raw"),
+
+    // no suggestion where only `../`, the entry point, or the file itself fits
+    ownArea("#pat/x.js", DEEP, null),
+    ownArea("#pat/index.js", ONE, null),
+    ownArea("#pat/one.js", ONE, null),
+  ],
+});
+
+testRule("enforce-layer-order", rule("enforce-layer-order"), {
+  valid: [
+    // `#a` is declared above `#f`, so it may import `#f` by any spelling
+    importing("#lib/f.ts", ONE),
+    importing("#lib/f.ts?raw", ONE),
+  ],
+  invalid: [
+    // `#f` is declared below `#a`, through a pattern or a query alike
+    {
+      ...importing("#pat/x.js", FILE_ALIAS),
+      errors: [{ messageId: "upward", data: { owner: "#f", target: "#a" } }],
+    },
+    {
+      ...importing("#pat/x.js?raw", FILE_ALIAS),
+      errors: [{ messageId: "upward", data: { owner: "#f", target: "#a" } }],
+    },
+    {
+      ...importing("./index.ts?raw", ONE),
+      errors: [{ messageId: "ownEntry", data: { owner: "#a", specifier: "./index.ts?raw" } }],
+    },
+  ],
+});

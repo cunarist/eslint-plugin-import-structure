@@ -24,6 +24,15 @@ const CONFIG_NAME = "package.json";
 /** A query or fragment suffix, which never names part of a path. */
 export const QUERY_PATTERN: RegExp = /[?#].*$/u;
 
+/**
+ * A specifier without its query or fragment, such as `#a/x.js` for
+ * `#a/x.js?raw`. The `#` that starts an alias is kept.
+ */
+export function stripQuery(specifier: string): string {
+  const alias = specifier.startsWith("#") ? "#" : "";
+  return alias + specifier.slice(alias.length).replace(QUERY_PATTERN, "");
+}
+
 /** A path written with a Windows drive after a leading slash, as in `/C:/dir`. */
 export const SLASHED_DRIVE_PATTERN: RegExp = /^\/[a-zA-Z]:/u;
 

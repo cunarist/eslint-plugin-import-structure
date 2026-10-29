@@ -81,3 +81,14 @@ export function resolveFrom(baseDir: string, relative: string): string {
 export function isInsideDir(path: string, dir: string): boolean {
   return path.startsWith(dir.endsWith("/") ? dir : `${dir}/`);
 }
+
+/**
+ * The `./` specifier from a directory to a path inside it, such as
+ * `./sub/x.ts`. Returns `null` for a path outside the directory, which only
+ * a banned `../` specifier could reach.
+ */
+export function childSpecifier(fromDir: string, path: string): string | null {
+  return isInsideDir(path, fromDir)
+    ? `./${path.slice(fromDir.replace(/\/$/u, "").length + 1)}`
+    : null;
+}

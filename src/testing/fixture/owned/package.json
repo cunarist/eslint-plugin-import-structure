@@ -4,6 +4,8 @@
     "#f": "./b/f.ts",
     "#deep": "./src/x/y/index.ts",
     "#tool": "./tools/lint.ts",
-    "#gen": "./build/generated.ts"
+    "#gen": "./build/generated.ts",
+    "#pat/*.js": "./a/*.ts",
+    "#lib/*": "./b/*"
   }
 }

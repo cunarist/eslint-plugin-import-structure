@@ -19,6 +19,7 @@ import {
   type PatternEntry,
   QUERY_PATTERN,
   SLASHED_DRIVE_PATTERN,
+  stripQuery,
 } from "./imports.ts";
 import { isInsideDir, normalizePath, parentDir, resolveFrom } from "./paths.ts";
 
@@ -76,68 +77,84 @@ export function findOwningEntry(config: ImportsConfig, filePath: string): Module
 }
 
 /**
- * The exact alias a deeper `#` specifier reaches past, such as `#utils` for
+ * The alias a deeper `#` specifier reaches past, such as `#utils` for
  * `#utils/internal.ts`, whether or not a subpath pattern makes it resolve.
  * It is the owner of the file the specifier names: the file a matching
  * subpath pattern resolves to, or else, under a folder alias prefix, the rest
  * of the specifier read as a path in that folder. So `#a/sub/x.ts` reaches
- * past `#a-sub` when that alias owns `a/sub/`. A named file no alias owns
- * falls back to the longest alias prefix. Returns `null` when no alias is a
- * prefix.
+ * past `#a-sub` when that alias owns `a/sub/`, and `#lib/x.ts` under a lone
+ * `"#lib/*"` pattern reaches past whichever alias owns the file it names. A
+ * named file no alias owns falls back to the longest alias prefix. Returns
+ * `null` when no alias owns the named file and none is a prefix. A query or
+ * fragment is ignored.
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
+  const bare = stripQuery(specifier);
+  const prefix = longestAliasPrefix(config, bare);
+  const path = namedPath(config, bare, prefix);
+  return (path === null ? null : findOwningEntry(config, path)) ?? prefix;
+}
+
+/**
+ * The file a deeper `#` specifier names, as `deeperAliasOwner` reads it, or
+ * `null` when no subpath pattern matches and no folder alias is a prefix.
+ */
+export function deeperAliasPath(config: ImportsConfig, specifier: string): string | null {
+  const bare = stripQuery(specifier);
+  return namedPath(config, bare, longestAliasPrefix(config, bare));
+}
+
+/** The alias with the longest specifier that is a `/` prefix of `bare`. */
+function longestAliasPrefix(config: ImportsConfig, bare: string): ModuleEntry | null {
   let best: ModuleEntry | null = null;
   for (const entry of config.entries) {
     if (
-      specifier.startsWith(`${entry.specifier}/`) &&
+      bare.startsWith(`${entry.specifier}/`) &&
       (best === null || entry.specifier.length > best.specifier.length)
     ) {
       best = entry;
     }
   }
-  if (best === null) {
-    return null;
-  }
-  const path = namedPath(config, specifier, best);
-  return (path === null ? null : findOwningEntry(config, path)) ?? best;
+  return best;
 }
 
 /**
- * The file a deeper `#` specifier names under the alias prefix `prefix`:
- * where a subpath pattern sends it, or else, for a folder alias, the rest of
- * the specifier read as a path in that folder. Returns `null` when neither
- * applies.
+ * The file a deeper `#` specifier, without its query, names: where a
+ * subpath pattern sends it, or else, under a folder alias prefix `prefix`,
+ * the rest of the specifier read as a path in that folder. Returns `null`
+ * when neither applies.
  */
-function namedPath(config: ImportsConfig, specifier: string, prefix: ModuleEntry): string | null {
-  const pattern = findPatternEntry(config, specifier);
+function namedPath(config: ImportsConfig, bare: string, prefix: ModuleEntry | null): string | null {
+  const pattern = findPatternEntry(config, bare);
   if (pattern !== null) {
-    return patternPath(config, pattern, specifier);
+    return patternPath(config, pattern, bare);
   }
-  if (!prefix.isBarrel) {
+  if (prefix === null || !prefix.isBarrel) {
     return null;
   }
-  const rest = specifier.slice(prefix.specifier.length + 1).replace(QUERY_PATTERN, "");
-  return resolveFrom(prefix.dir, `./${rest}`);
+  return resolveFrom(prefix.dir, `./${bare.slice(prefix.specifier.length + 1)}`);
 }
 
-/** The file a subpath pattern resolves a `#` specifier matching it to. */
+/** The file a subpath pattern resolves a matching `#` specifier to. */
 function patternPath(config: ImportsConfig, pattern: PatternEntry, specifier: string): string {
-  const matched = specifier
-    .slice(pattern.prefix.length, specifier.length - pattern.suffix.length)
-    .replace(QUERY_PATTERN, "");
+  const bare = stripQuery(specifier);
+  const matched = bare.slice(pattern.prefix.length, bare.length - pattern.suffix.length);
   return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
 }
 
 /**
  * Finds the subpath pattern a deep `#` specifier reaches through, such as
- * `#utils/*` for `#utils/internal.ts`. Returns `null` when none match.
+ * `#utils/*` for `#utils/internal.ts`. A query or fragment is ignored, so
+ * `#utils/x.js?raw` still matches `#utils/*.js`. Returns `null` when none
+ * match.
  */
 export function findPatternEntry(config: ImportsConfig, specifier: string): PatternEntry | null {
+  const bare = stripQuery(specifier);
   for (const pattern of config.patterns) {
     if (
-      specifier.length >= pattern.prefix.length + pattern.suffix.length &&
-      specifier.startsWith(pattern.prefix) &&
-      specifier.endsWith(pattern.suffix)
+      bare.length >= pattern.prefix.length + pattern.suffix.length &&
+      bare.startsWith(pattern.prefix) &&
+      bare.endsWith(pattern.suffix)
     ) {
       return pattern;
     }
@@ -150,7 +167,7 @@ export function findPatternEntry(config: ImportsConfig, specifier: string): Patt
  * entry such as `#utils` or a deep one such as `#utils/internal.ts`.
  */
 export function targetModule(config: ImportsConfig, specifier: string): ModuleEntry | null {
-  const exact = config.bySpecifier.get(specifier);
+  const exact = config.bySpecifier.get(stripQuery(specifier));
   if (exact !== undefined) {
     return exact;
   }
@@ -181,7 +198,7 @@ export function resolveLocalSpecifier(filename: string, specifier: string): stri
   if (config === null) {
     return null;
   }
-  const exact = config.bySpecifier.get(specifier);
+  const exact = config.bySpecifier.get(stripQuery(specifier));
   if (exact !== undefined) {
     return exact.target;
   }
@@ -206,7 +223,7 @@ export function resolveTarget(
   if (!specifier.startsWith(".")) {
     return null;
   }
-  const resolved = resolveFrom(parentDir(normalizePath(filename)), specifier);
+  const resolved = resolveFrom(parentDir(normalizePath(filename)), stripQuery(specifier));
   return config.byTarget.get(resolved) ?? null;
 }
 

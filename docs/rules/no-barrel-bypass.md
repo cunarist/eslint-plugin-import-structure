@@ -18,11 +18,17 @@ exported from the alias's target.
   fires whether or not a subpath pattern makes it resolve. The rule suggests
   the alias itself. It is a suggestion, not a fix: the target may not export
   the name yet.
-- The suggested alias is the one that owns the path the specifier names, so
+- The suggested alias is the one that owns the file the specifier names, so
   with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past `#a-sub`.
-- No `/*` subpath patterns: a pattern no alias sits under, such as a
-  catch-all `"#/*": "./src/*"`, fires when it is used from or into an owned
-  area, with no alias to suggest.
+- No `/*` subpath patterns: a pattern fires when it names a file an alias
+  owns, even with no exact alias of its own name, and suggests that owner,
+  so a catch-all `"#/*": "./src/*"` makes `#/utils/x.ts` reach past
+  `#utils`. A pattern into files no alias owns fires when it is used from an
+  owned area, with no alias to suggest.
+- Inside an area, the area's own alias is never suggested, since importing
+  it is a cycle (`enforce-layer-order`). The rule suggests the `./` path to
+  the file instead, when one exists without `../`.
+- A query or fragment suffix, such as `?raw`, is ignored when matching.
 - See [Modules](../../README.md#modules) for the whole rule.
 
 Examples of **incorrect** code for this rule:
@@ -32,10 +38,20 @@ Examples of **incorrect** code for this rule:
 import { internal } from "#components/internal.ts";
 ```
 
+```ts
+// in ./src/components/button.ts
+import { internal } from "#components/internal.ts";
+```
+
 Examples of **correct** code for this rule:
 
 ```ts
 import { internal } from "#components";
+```
+
+```ts
+// in ./src/components/button.ts
+import { internal } from "./internal.ts";
 ```
 
 ## When Not To Use It

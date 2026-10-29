@@ -36,7 +36,9 @@ detectable, and the `imports` map doubles as documentation of the layers.
   them. Merge the aliases.
 - A target is resolved whether it is written as an exact alias, a deeper
   specifier such as `#components/x.ts`, or a relative path to an alias's
-  target.
+  target. A specifier a `/*` subpath pattern matches belongs to the alias
+  that owns the file it resolves to, even when no alias shares the
+  pattern's name. A query or fragment suffix, such as `?raw`, is ignored.
 - A file importing its own area's alias fires too, since that is a cycle
   waiting to happen. Use a relative import of the sibling file instead.
 - To fix an upward import, either reorder the two aliases or move the shared
