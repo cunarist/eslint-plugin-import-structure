@@ -10,8 +10,8 @@ import {
 /**
  * `no-self-import` - rejects any statically knowable specifier that resolves
  * to the importing file: a relative path, an absolute path or `file:` URL, an
- * exact `#` entry, or a `#` subpath pattern, with the file's own script
- * extension, another one, or none.
+ * exact `#` entry, or a `#` subpath pattern, in any spelling TypeScript
+ * resolves to the file (such as `.js` for `.ts`, or no extension).
  *
  * A self-import is an immediate circular dependency.
  */
