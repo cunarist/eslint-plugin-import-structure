@@ -54,17 +54,20 @@ interface InvalidCase {
   errors: ExpectedError[];
 }
 
-/** A deep specifier from outside the area of `owner`, suggesting `owner`. */
+/**
+ * A deep specifier from outside the area of `owner`, suggesting `owner`
+ * unless it carries a query or fragment, which the alias would lose.
+ */
 function bypass(specifier: string, owner: string): InvalidCase {
+  const output = `import { x } from "${owner}";\n`;
+  const hasQuery = /[?#]/u.test(specifier.slice(1));
   return {
     ...importing(specifier, MAIN),
     errors: [
       {
         messageId: "bypass",
         data: { specifier, owner },
-        suggestions: [
-          { messageId: "useEntry", data: { owner }, output: `import { x } from "${owner}";\n` },
-        ],
+        suggestions: hasQuery ? [] : [{ messageId: "useEntry", data: { owner }, output }],
       },
     ],
   };

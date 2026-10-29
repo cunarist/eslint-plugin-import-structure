@@ -72,7 +72,11 @@ function reportOwnArea(
   });
 }
 
-/** Reports a deeper `#` specifier from outside the area of its owner. */
+/**
+ * Reports a deeper `#` specifier from outside the area of its owner,
+ * suggesting the alias unless a query or fragment, which the alias cannot
+ * carry, would be lost.
+ */
 function reportBypass(
   context: ExplicitContext,
   node: SpecifierNode,
@@ -83,13 +87,17 @@ function reportBypass(
     node,
     messageId: "bypass",
     data: { specifier, owner: owner.specifier },
-    suggest: [
-      {
-        messageId: "useEntry",
-        data: { owner: owner.specifier },
-        fix: (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, owner.specifier)),
-      },
-    ],
+    suggest:
+      stripQuery(specifier) === specifier
+        ? [
+            {
+              messageId: "useEntry",
+              data: { owner: owner.specifier },
+              fix: (fixer): RuleTextEdit =>
+                fixer.replaceText(node, quoteLike(node, owner.specifier)),
+            },
+          ]
+        : [],
   });
 }
 

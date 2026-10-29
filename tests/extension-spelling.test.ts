@@ -4,7 +4,8 @@
  * `nodenext` code writes `./index.js` and bundler code `./index` for
  * `./index.ts`. So an own-entry cycle is caught however it is spelled, no
  * suggestion names the entry point or the importer itself, and a path to an
- * alias's target is rewritten to the alias in any spelling.
+ * alias's target is rewritten to the alias in any spelling, unless a query
+ * or fragment, which the alias cannot carry, would be lost.
  */
 
 import plugin from "#plugin";
@@ -38,7 +39,7 @@ interface InvalidCase {
   code: string;
   filename: string;
   errors: ExpectedError[];
-  output?: string;
+  output?: string | null;
 }
 
 /** One import of `specifier`, linted as `filename`. */
@@ -103,9 +104,26 @@ testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
   ],
 });
 
+testRule("no-self-import", rule("no-self-import"), {
+  valid: [importing("./one.css", ONE), importing("./two.js", ONE)],
+  invalid: [
+    { ...importing("./one.js", ONE), errors: [{ messageId: "selfImport" }] },
+    { ...importing("./one", ONE), errors: [{ messageId: "selfImport" }] },
+    { ...importing("#pat/one", ONE), errors: [{ messageId: "selfImport" }] },
+    { ...importing("#pat/one.js?raw", ONE), errors: [{ messageId: "selfImport" }] },
+  ],
+});
+
 testRule("prefer-alias-import", rule("prefer-alias-import"), {
   valid: [importing("./b/f.css", MAIN)],
   invalid: [
+    // a query or fragment is reported without a fix, since the alias would
+    // lose it
+    {
+      ...importing("./b/f.ts?raw", MAIN),
+      output: null,
+      errors: [{ messageId: "useAlias", data: { specifier: "./b/f.ts?raw", alias: "#f" } }],
+    },
     {
       ...importing("./b/f.js", MAIN),
       output: 'import { x } from "#f";\n',
@@ -122,6 +140,11 @@ testRule("prefer-alias-import", rule("prefer-alias-import"), {
 testRule("no-parent-import", rule("no-parent-import"), {
   valid: [],
   invalid: [
+    {
+      ...importing("../b/f.ts?raw", ONE),
+      output: null,
+      errors: [{ messageId: "useAlias", data: { specifier: "../b/f.ts?raw", alias: "#f" } }],
+    },
     {
       ...importing("../a/index.js", SIBLING),
       output: 'import { x } from "#a";\n',

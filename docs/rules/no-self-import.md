@@ -17,7 +17,9 @@ still be uninitialized. Read the local declaration directly instead.
   backtick literal, and a type-level `import("...")`.
 - Relative paths, absolute paths, `file:` URLs, exact `#` entries, and `#`
   subpath patterns from the nearest `package.json` are all resolved.
-- A query or fragment suffix, such as `?raw`, is ignored when resolving.
+- A query or fragment suffix, such as `?raw`, is ignored when resolving,
+  and a script extension may be swapped or dropped, so `./one.js` and
+  `./one` both name `one.ts`.
 - Package specifiers are never resolved, so they never fire.
 
 Examples of **incorrect** code for this rule:

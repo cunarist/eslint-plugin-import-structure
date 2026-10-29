@@ -16,11 +16,13 @@ spelling, which hides the dependency from anyone searching for the alias and
 lets a path sidestep the layer order of
 [`enforce-layer-order`](enforce-layer-order.md).
 
-- A `./` specifier fires when an alias points at exactly the resolved file
+- A `./` specifier fires when an alias points at the resolved file
   and the importing file lies outside that alias's area, a same-folder
   sibling of a file alias included. The fix swaps in the alias, keeping the
   quote style. The target counts as named with its own extension, another
   script extension, or none, so `./b/f.js` and `./b/f` both name `b/f.ts`.
+  A specifier with a query or fragment, such as `./b/f.ts?raw`, is reported
+  without a fix, since the alias cannot carry it.
 - A path to the importing file's own area entry point is left to
   `enforce-layer-order`, since switching to the alias would not fix it.
 - A path to another file inside an area is left to

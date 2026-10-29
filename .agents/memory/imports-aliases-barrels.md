@@ -37,7 +37,11 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
 - **A target is named in any script extension spelling** (v0.11.1,
   `namesSameModule` / `entryAt`): `./index.js` and `./index` name
   `./index.ts` for ownership, `ownEntry`, alias rewrites, and suggestions;
-  `./index.css` does not.
+  `./index.css` does not. `no-self-import` matches the same way.
+- **A `?query`/`#fragment` blocks alias rewrites**: an alias can't carry
+  one (`#f?raw` is no `imports` key), so `prefer-alias-import` and
+  `no-parent-import` report it without a fix and `no-barrel-bypass` offers
+  no `useEntry` suggestion; `useRelative` keeps the query.
 - **No 2 aliases on the same area** (same target, or 2 index files in one
   folder). `enforce-layer-order`
   reports it once at the top of every file both own; other rules count the

@@ -22,6 +22,8 @@ through an alias.
   file, spelled with its own extension, another script extension, or none,
   the fix rewrites the specifier to that alias, keeping the quote
   style. A backtick specifier becomes a double-quoted one.
+- A specifier with a query or fragment, such as `../b/f.ts?raw`, is
+  reported without a fix, since the alias cannot carry it.
 - With no such alias, or when the alias is the importing file's own area,
   the rule reports without a fix. Add an alias, or move the file.
 

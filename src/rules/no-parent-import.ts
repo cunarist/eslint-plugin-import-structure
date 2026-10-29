@@ -8,6 +8,7 @@ import {
   isOwnedBy,
   quoteLike,
   resolveLocalSpecifier,
+  stripQuery,
   visitSpecifiers,
 } from "#helpers";
 
@@ -51,7 +52,12 @@ export const noParentImportRule: ExplicitRule = {
         node,
         messageId: "useAlias",
         data: { specifier, alias: entry.specifier },
-        fix: (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier)),
+        // A query or fragment changes what is imported, and the alias cannot
+        // carry one, so such a specifier is reported without a fix.
+        fix:
+          stripQuery(specifier) === specifier
+            ? (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier))
+            : null,
       });
     });
   },

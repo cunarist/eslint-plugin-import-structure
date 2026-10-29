@@ -8,13 +8,14 @@ import {
   isOwnedBy,
   quoteLike,
   resolveLocalSpecifier,
+  stripQuery,
   visitSpecifiers,
 } from "#helpers";
 
 /**
  * `prefer-alias-import` - requires the `#` alias when a `./` specifier names
- * the target of an alias, in any script extension spelling, from outside that alias's area, a same-folder
- * sibling included. An alias owns its target, so its target has one spelling
+ * the target of an alias, in any script extension spelling, from outside
+ * that alias's area, a same-folder sibling included. An alias owns its target, so its target has one spelling
  * everywhere outside it.
  *
  * One spelling per module keeps `package.json` `imports` the single source of
@@ -55,7 +56,12 @@ export const preferAliasImportRule: ExplicitRule = {
         node,
         messageId: "useAlias",
         data: { specifier, alias: entry.specifier },
-        fix: (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier)),
+        // A query or fragment changes what is imported, and the alias cannot
+        // carry one, so such a specifier is reported without a fix.
+        fix:
+          stripQuery(specifier) === specifier
+            ? (fixer): RuleTextEdit => fixer.replaceText(node, quoteLike(node, entry.specifier))
+            : null,
       });
     });
   },
