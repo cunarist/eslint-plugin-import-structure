@@ -93,31 +93,46 @@ export function childSpecifier(fromDir: string, path: string): string | null {
     : null;
 }
 
-/** The extensions of script modules, which a specifier may swap or drop. */
-const SCRIPT_EXTENSIONS: Set<string> = new Set([
-  ".js",
-  ".mjs",
-  ".cjs",
-  ".ts",
-  ".mts",
-  ".cts",
-  ".jsx",
-  ".tsx",
+/** The extensions a specifier without one may resolve to. */
+const BARE_EXTENSIONS: Set<string> = new Set([".ts", ".tsx", ".js", ".jsx"]);
+
+/**
+ * The source extensions a specifier's extension stands for, as TypeScript
+ * maps them: `./x.js` names `x.ts`, `./x.mjs` names `x.mts`, and so on.
+ */
+const SOURCE_EXTENSIONS: Map<string, Set<string>> = new Map([
+  [".js", new Set([".ts", ".tsx"])],
+  [".jsx", new Set([".tsx"])],
+  [".mjs", new Set([".mts"])],
+  [".cjs", new Set([".cts"])],
 ]);
 
-/** A path without its last extension when that is a script extension. */
-function withoutScriptExtension(path: string): string {
+/** The last extension of a path's last segment, or `""` when it has none. */
+function extensionOf(path: string): string {
   const dot = path.lastIndexOf(".");
-  const isExtension = dot > path.lastIndexOf("/") + 1;
-  return isExtension && SCRIPT_EXTENSIONS.has(path.slice(dot)) ? path.slice(0, dot) : path;
+  return dot > path.lastIndexOf("/") + 1 ? path.slice(dot) : "";
 }
 
 /**
- * Whether a resolved specifier path names the module file `file`: the same
- * path, or the same path with a script extension swapped or dropped, as
- * `nodenext` code writes `./index.js` and bundler code `./index` for
- * `./index.ts`. Another extension, such as `index.css`, names another file.
+ * Whether a resolved specifier path names the module file `file`, the way
+ * TypeScript resolves it: the exact path, the path without an extension for
+ * a `.ts`, `.tsx`, `.js`, or `.jsx` file, or the path with the output
+ * extension of the file's source one, such as `./index.js` for `index.ts`
+ * or `./x.mjs` for `x.mts`. One-directional: `./x.mts` never names `x.ts`,
+ * and another extension, such as `index.css`, names another file.
  */
 export function namesSameModule(path: string, file: string): boolean {
-  return path === file || withoutScriptExtension(path) === withoutScriptExtension(file);
+  if (path === file) {
+    return true;
+  }
+  const fileExtension = extensionOf(file);
+  const fileStem = file.slice(0, file.length - fileExtension.length);
+  if (path === fileStem) {
+    return BARE_EXTENSIONS.has(fileExtension);
+  }
+  const extension = extensionOf(path);
+  return (
+    path.slice(0, path.length - extension.length) === fileStem &&
+    SOURCE_EXTENSIONS.get(extension)?.has(fileExtension) === true
+  );
 }

@@ -1,8 +1,8 @@
 /**
- * Regression: a specifier names a module whether it spells the file's own
- * extension, swaps it for another script extension, or drops it, as
- * `nodenext` code writes `./index.js` and bundler code `./index` for
- * `./index.ts`. So an own-entry cycle is caught however it is spelled, no
+ * Regression: a specifier names a module in any spelling TypeScript resolves
+ * to it, as `nodenext` code writes `./index.js` and bundler code `./index`
+ * for `./index.ts`, but never another module kind beside it, such as
+ * `./f.mts` beside `f.ts`. So an own-entry cycle is caught however it is spelled, no
  * suggestion names the entry point or the importer itself, and a path to an
  * alias's target is rewritten to the alias in any spelling, unless a query
  * or fragment, which the alias cannot carry, would be lost.
@@ -63,8 +63,17 @@ function ownArea(specifier: string): InvalidCase {
   };
 }
 
+/** A file beside the file alias `#f`'s target, of another module kind. */
+const DUAL = owned("b/f.mts");
+
 testRule("enforce-layer-order", rule("enforce-layer-order"), {
-  valid: [importing("#pat/two", ONE), importing("./index.css", ONE)],
+  valid: [
+    importing("#pat/two", ONE),
+    importing("./index.css", ONE),
+
+    // `b/f.mts` is another module than `#f`'s `b/f.ts`, not part of it
+    importing("./f.ts", DUAL),
+  ],
   invalid: [
     ownEntry("#pat/index"),
     ownEntry("#pat/index.js"),
@@ -105,7 +114,7 @@ testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
 });
 
 testRule("no-self-import", rule("no-self-import"), {
-  valid: [importing("./one.css", ONE), importing("./two.js", ONE)],
+  valid: [importing("./one.css", ONE), importing("./two.js", ONE), importing("./f.ts", DUAL)],
   invalid: [
     { ...importing("./one.js", ONE), errors: [{ messageId: "selfImport" }] },
     { ...importing("./one", ONE), errors: [{ messageId: "selfImport" }] },
@@ -115,7 +124,13 @@ testRule("no-self-import", rule("no-self-import"), {
 });
 
 testRule("prefer-alias-import", rule("prefer-alias-import"), {
-  valid: [importing("./b/f.css", MAIN)],
+  // other module kinds beside `b/f.ts` are other files
+  valid: [
+    importing("./b/f.css", MAIN),
+    importing("./b/f.mts", MAIN),
+    importing("./b/f.tsx", MAIN),
+    importing("./b/f.cjs", MAIN),
+  ],
   invalid: [
     // a query or fragment is reported without a fix, since the alias would
     // lose it
@@ -140,6 +155,11 @@ testRule("prefer-alias-import", rule("prefer-alias-import"), {
 testRule("no-parent-import", rule("no-parent-import"), {
   valid: [],
   invalid: [
+    {
+      ...importing("../b/f.mts", ONE),
+      output: null,
+      errors: [{ messageId: "parentImport", data: { specifier: "../b/f.mts" } }],
+    },
     {
       ...importing("../b/f.ts?raw", ONE),
       output: null,

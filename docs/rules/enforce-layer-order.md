@@ -39,8 +39,8 @@ detectable, and the `imports` map doubles as documentation of the layers.
   target. A specifier a `/*` subpath pattern matches belongs to the alias
   that owns the file it resolves to, whatever the pattern's name, and to no
   alias when none owns that file. A query or fragment suffix, such as
-  `?raw`, is ignored, and a script extension may be swapped or dropped, so
-  `./index.js` and `./index` name `./index.ts`.
+  `?raw`, is ignored, and a path names a file in any spelling TypeScript
+  resolves to it, so `./index.js` and `./index` name `./index.ts`.
 - A file importing its own area's alias, or a path or deeper specifier to
   its entry point, fires too, since that is a cycle waiting to happen. Use a
   relative import of the sibling file instead. A deeper specifier to any

@@ -14,9 +14,9 @@ import {
 
 /**
  * `prefer-alias-import` - requires the `#` alias when a `./` specifier names
- * the target of an alias, in any script extension spelling, from outside
- * that alias's area, a same-folder sibling included. An alias owns its target, so its target has one spelling
- * everywhere outside it.
+ * the target of an alias, in any spelling TypeScript resolves to it, from
+ * outside that alias's area, a same-folder sibling included. An alias owns
+ * its target, so its target has one spelling everywhere outside it.
  *
  * One spelling per module keeps `package.json` `imports` the single source of
  * truth, and keeps the layer rules from being sidestepped by a path.

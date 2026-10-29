@@ -19,8 +19,11 @@ lets a path sidestep the layer order of
 - A `./` specifier fires when an alias points at the resolved file
   and the importing file lies outside that alias's area, a same-folder
   sibling of a file alias included. The fix swaps in the alias, keeping the
-  quote style. The target counts as named with its own extension, another
-  script extension, or none, so `./b/f.js` and `./b/f` both name `b/f.ts`.
+  quote style. The target counts as named in any spelling TypeScript
+  resolves to it: its own extension, the output one (`.js` for `.ts` or
+  `.tsx`, `.jsx` for `.tsx`, `.mjs` for `.mts`, `.cjs` for `.cts`), or none
+  for a `.ts`, `.tsx`, `.js`, or `.jsx` file. So `./b/f.js` and `./b/f`
+  both name `b/f.ts`, but `./b/f.mts` names another file.
   A specifier with a query or fragment, such as `./b/f.ts?raw`, is reported
   without a fix, since the alias cannot carry it.
 - A path to the importing file's own area entry point is left to

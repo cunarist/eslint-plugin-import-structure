@@ -17,7 +17,8 @@ import {
  * folder and everything below it, and an alias to any other file owns only
  * that file. Code outside an area reaches it only through the alias. Inside
  * an area, siblings and subfolders are free, and so are files no alias owns.
- * A path to an alias's target, in any script extension spelling, is left to
+ * A path to an alias's target, in any spelling TypeScript resolves to it, is
+ * left to
  * `prefer-alias-import`, which rewrites it to the alias.
  */
 export const noRelativeBypassRule: ExplicitRule = {

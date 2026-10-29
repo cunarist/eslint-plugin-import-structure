@@ -19,7 +19,7 @@ through an alias.
   owns it or not, and in every import, re-export, dynamic `import()`, and
   type-level `import("...")`.
 - When the nearest `package.json` has an alias that points at the same
-  file, spelled with its own extension, another script extension, or none,
+  file, in any spelling TypeScript resolves to it (such as `.js` for `.ts`),
   the fix rewrites the specifier to that alias, keeping the quote
   style. A backtick specifier becomes a double-quoted one.
 - A specifier with a query or fragment, such as `../b/f.ts?raw`, is

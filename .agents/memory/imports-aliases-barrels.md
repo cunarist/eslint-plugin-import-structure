@@ -34,10 +34,12 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   and suggests the `./` path when one exists without `../`;
   `enforce-layer-order` reports `ownEntry` there only when the specifier
   names the area's entry point.
-- **A target is named in any script extension spelling** (v0.11.1,
-  `namesSameModule` / `entryAt`): `./index.js` and `./index` name
-  `./index.ts` for ownership, `ownEntry`, alias rewrites, and suggestions;
-  `./index.css` does not. `no-self-import` matches the same way.
+- **A specifier names a file in any spelling TypeScript resolves** (v0.11.1,
+  `namesSameModule(specifierPath, file)`, one-directional, used by `entryAt`,
+  `ownEntry`, `no-self-import`, suggestion guards): `./index.js` and
+  `./index` name `index.ts`, `.mjs` names `.mts`, `.cjs` `.cts`; `./f.mts`
+  never names `f.ts`. Ownership (`ownsPath`) stays exact: a linted file is
+  a real file, not a specifier.
 - **A `?query`/`#fragment` blocks alias rewrites**: an alias can't carry
   one (`#f?raw` is no `imports` key), so `prefer-alias-import` and
   `no-parent-import` report it without a fix and `no-barrel-bypass` offers

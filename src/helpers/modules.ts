@@ -30,7 +30,7 @@ import { isInsideDir, namesSameModule, normalizePath, parentDir, resolveFrom } f
  */
 function ownsPath(entry: ModuleEntry, path: string): boolean {
   return (
-    namesSameModule(path, entry.target) ||
+    entry.target === path ||
     (entry.isBarrel && (path === entry.dir || isInsideDir(path, entry.dir)))
   );
 }

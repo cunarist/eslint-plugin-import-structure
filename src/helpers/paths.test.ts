@@ -80,14 +80,23 @@ describe("childSpecifier", () => {
 });
 
 describe("namesSameModule", () => {
-  it("matches a script extension swapped or dropped", () => {
+  it("matches the spellings TypeScript resolves to a file", () => {
     expect(namesSameModule("/a/index.ts", "/a/index.ts")).toBe(true);
     expect(namesSameModule("/a/index.js", "/a/index.ts")).toBe(true);
     expect(namesSameModule("/a/index", "/a/index.ts")).toBe(true);
     expect(namesSameModule("/a/x.y", "/a/x.y.ts")).toBe(true);
+    expect(namesSameModule("/b/f.mjs", "/b/f.mts")).toBe(true);
+    expect(namesSameModule("/b/f.cjs", "/b/f.cts")).toBe(true);
+    expect(namesSameModule("/b/f.js", "/b/f.tsx")).toBe(true);
+    expect(namesSameModule("/b/f.jsx", "/b/f.tsx")).toBe(true);
   });
 
-  it("tells apart other extensions, stems, and folders", () => {
+  it("tells apart other module kinds, extensions, stems, and folders", () => {
+    expect(namesSameModule("/b/f.mts", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.tsx", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.cjs", "/b/f.ts")).toBe(false);
+    expect(namesSameModule("/b/f.ts", "/b/f.js")).toBe(false);
+    expect(namesSameModule("/b/f", "/b/f.mts")).toBe(false);
     expect(namesSameModule("/a/index.css", "/a/index.ts")).toBe(false);
     expect(namesSameModule("/a/one.ts", "/a/index.ts")).toBe(false);
     expect(namesSameModule("/b/index.ts", "/a/index.ts")).toBe(false);

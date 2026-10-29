@@ -29,7 +29,8 @@ exported from the alias's target.
 - Inside an area, the area's own alias is never suggested, since importing
   it is a cycle (`enforce-layer-order`). The rule suggests the `./` path to
   the file instead, when one exists without `../` and the file is neither
-  the entry point nor the importer, in any script extension spelling.
+  the entry point nor the importer, in any spelling TypeScript resolves to
+  them, such as `.js` for `.ts`.
 - A query or fragment suffix, such as `?raw`, is ignored when matching.
 - See [Modules](../../README.md#modules) for the whole rule.
 

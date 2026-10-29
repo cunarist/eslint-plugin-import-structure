@@ -24,8 +24,9 @@ the alias.
   those inside a deeper alias's area, which are reached through that alias.
 - Files no alias owns are free from anywhere, and no `index.ts` is demanded
   of their folders.
-- A path to an alias's target, with any script extension or none, is left
-  to [`prefer-alias-import`](prefer-alias-import.md), which rewrites it.
+- A path to an alias's target, in any spelling TypeScript resolves to it
+  (such as `.js` for `.ts`, or no extension), is left to
+  [`prefer-alias-import`](prefer-alias-import.md), which rewrites it.
 - `../`, `#`, and package specifiers are left to other rules.
 - See [Modules](../../README.md#modules) for the whole rule.
 
