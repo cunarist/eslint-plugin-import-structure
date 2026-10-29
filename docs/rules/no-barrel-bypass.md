@@ -18,6 +18,8 @@ exported from the alias's target.
   fires whether or not a subpath pattern makes it resolve. The rule suggests
   the alias itself. It is a suggestion, not a fix: the target may not export
   the name yet.
+- The suggested alias is the one that owns the path the specifier names, so
+  with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past `#a-sub`.
 - No `/*` subpath patterns: a pattern no alias sits under, such as a
   catch-all `"#/*": "./src/*"`, fires when it is used from or into an owned
   area, with no alias to suggest.

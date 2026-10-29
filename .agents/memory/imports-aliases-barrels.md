@@ -1,5 +1,5 @@
 ---
-description: An alias owns its target (folder index.ts = folder and below, any other file = that file); no overlap; outside an area only the exact alias reaches it; ../ is banned in every file; no folder names in the rule; locally, aliases target only direct src/ subfolders
+description: An alias owns its target (folder index.ts = folder and below, any other file = that file) minus any deeper alias's area; 2 aliases on the same area is an error; outside an area only the exact alias reaches it; ../ is banned in every file; no folder names in the rule; locally, aliases target only direct src/ subfolders
 ---
 
 ## `#` aliases own their targets
@@ -16,10 +16,18 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
 - **An alias may point anywhere** and owns its target. An alias to a
   folder's `index.ts` owns that folder and everything below it; an alias to
   any other file owns only that file.
-- **No overlap.** No file may be owned by 2 aliases: no alias inside another
-  alias's area, and no 2 aliases with the same target. the import-structure plugin's
-  `enforce-layer-order` reports it once at the top of every file 2 aliases
-  claim. Fix by merging the aliases or moving files apart.
+- **Nested aliases carve out their area** (user rule 2026-10-29, replacing
+  "no alias inside another alias's area"). An alias inside another alias's
+  area owns its part; the outer alias owns the rest. Every file has one
+  owner, the alias with the deepest area holding it (`owningEntries` /
+  `findOwningEntry` in `src/helpers/modules.ts`). So `./sub/x.ts` from the
+  outer area is a bypass, `#a/sub/x.ts` reaches past `#a-sub`
+  (`deeperAliasOwner` reads the rest of the specifier as a path in the
+  prefix alias's folder), and parent/child obey the layer order like any
+  other pair.
+- **No 2 aliases on the same area** (same target). `enforce-layer-order`
+  reports it once at the top of every file both own; other rules count the
+  file as inside both. Fix by merging the aliases.
 - **Outside an area, only the exact alias reaches it.** A deeper alias
   specifier (`#a/one.ts`, `no-barrel-bypass`) and a relative path into the
   area (`./a/one.ts`, `no-relative-bypass`; `./b/f.ts` to a file alias,
@@ -37,7 +45,7 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
 "imports": {
   "#a": "./a/index.ts",      // owns a/**
   "#f": "./b/f.ts",          // owns only b/f.ts
-  "#a-sub": "./a/sub/index.ts", // no: inside #a
+  "#a-sub": "./a/sub/index.ts", // owns a/sub/**, carved out of #a
   "#a2": "./a/index.ts"      // no: same target as #a
 }
 ```
@@ -52,7 +60,8 @@ import { f } from "./b/f.ts"; // no: relative path to a file alias
 import { g } from "./b/g.ts"; // yes: unowned
 // in a/one.ts, owned by #a
 import { two } from "./two.ts"; // yes: sibling
-import { deep } from "./sub/deep.ts"; // yes: subfolder of the same area
+import { deep } from "./other/deep.ts"; // yes: subfolder of the same area
+import { s } from "./sub/x.ts"; // no: inside #a-sub, use "#a-sub"
 import { x } from "../x.ts"; // no: no ../ anywhere
 ```
 

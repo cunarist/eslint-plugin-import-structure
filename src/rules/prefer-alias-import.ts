@@ -4,7 +4,7 @@ import {
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
-  isClaimedBy,
+  isOwnedBy,
   quoteLike,
   resolveLocalSpecifier,
   visitSpecifiers,
@@ -47,7 +47,7 @@ export const preferAliasImportRule: ExplicitRule = {
       }
       // Reaching the entry point of the importing file's own area is never
       // fixed by switching to the alias, so "enforce-layer-order" owns it.
-      if (isClaimedBy(config, context.filename, entry)) {
+      if (isOwnedBy(config, context.filename, entry)) {
         return;
       }
       context.report({

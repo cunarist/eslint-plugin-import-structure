@@ -37,7 +37,8 @@ and follow it before reasoning or responding.
   only other JSON files are the rule-test fixtures under
   `src/testing/fixture/`: its `package.json`, a nested one that proves the
   config lookup stops at the nearest `package.json`, as Node.js does, and the
-  `owned/` and `overlap/` projects that pin the alias ownership rule.
+  `owned/`, `nested/`, and `overlap/` projects that pin the alias ownership
+  rule.
 - `tsconfig.json` turns on exactly `strict`, `noUncheckedIndexedAccess`,
   `noPropertyAccessFromIndexSignature`, `noImplicitReturns`,
   `noUnusedLocals`, `noUnusedParameters`, `noImplicitOverride`,
@@ -58,7 +59,8 @@ and follow it before reasoning or responding.
   registry.
 - Aliases follow one rule, with no folder names in it: an alias owns its
   target (a folder's `index.ts` owns that folder and everything below it;
-  any other file owns only itself), no file is owned by 2 aliases, code
+  any other file owns only itself) minus the area of any deeper alias
+  inside it, 2 aliases with the same target are an error, code
   outside an area reaches it only through the exact alias, relative imports
   inside an area are free, and `../` is banned in every file. This repo's
   aliases, in layer order (`enforce-layer-order`): `#plugin`, `#rules`,

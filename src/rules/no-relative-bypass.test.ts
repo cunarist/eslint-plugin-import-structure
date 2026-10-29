@@ -45,8 +45,19 @@ testRule("no-relative-bypass", noRelativeBypassRule, {
       code: 'import { thing } from "./unmapped/deep/thing.ts";\n',
       filename: SRC,
     },
+
+    // inside an alias nested in another's area, and beside it in the outer area
+    { code: 'import { y } from "./y.ts";\n', filename: fixture("nested/a/sub/x.ts") },
+    { code: 'import { y } from "./y.ts";\n', filename: fixture("nested/a/x.ts") },
   ],
   invalid: [
+    // rejects a path from an outer area into an alias nested in it
+    {
+      code: 'import { x } from "./sub/x.ts";\n',
+      filename: fixture("nested/a/x.ts"),
+      errors: [{ messageId: "bypass", data: { specifier: "./sub/x.ts", alias: "#a-sub" } }],
+    },
+
     // rejects a relative path into an area from outside it
     {
       code: internalCode,

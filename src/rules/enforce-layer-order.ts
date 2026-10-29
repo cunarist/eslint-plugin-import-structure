@@ -1,11 +1,11 @@
 import type { TSESTree } from "@typescript-eslint/types";
 
 import {
-  claimingEntries,
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
   findOwningEntry,
+  owningEntries,
   resolveTarget,
   visitSpecifiers,
 } from "#helpers";
@@ -14,7 +14,11 @@ import {
  * `enforce-layer-order` - treats the order of `#` aliases in `package.json`
  * `imports` as the layer order, top layer first: an area may only import
  * aliases declared below its own. Also rejects a file that imports its own
- * area's alias, by alias or by path, and a file that two aliases claim.
+ * area's alias, by alias or by path, and a file that two aliases with the
+ * same area both own.
+ *
+ * An alias inside another alias's area owns its part, carved out of the
+ * outer area, and the two are ordered like any other pair of aliases.
  *
  * This makes cycles between areas structurally impossible rather than
  * merely detectable. Lint cannot report on `package.json` itself, so an
@@ -32,7 +36,8 @@ export const enforceLayerOrderRule: ExplicitRule = {
       ownEntry: "'{{owner}}' must not import its own entry point through '{{specifier}}'.",
       upward:
         "'{{owner}}' must not import '{{target}}', which is declared above it in package.json.",
-      overlap: "This file is owned by more than one alias in package.json: {{aliases}}.",
+      overlap:
+        "This file is owned by more than one alias with the same target in package.json: {{aliases}}.",
     },
   },
   create(context) {
@@ -66,15 +71,15 @@ export const enforceLayerOrderRule: ExplicitRule = {
       ...specifiers,
       Program(node: TSESTree.Program): void {
         const config = findImportsConfig(context.filename);
-        const claiming = config === null ? [] : claimingEntries(config, context.filename);
-        if (claiming.length < 2) {
+        const owners = config === null ? [] : owningEntries(config, context.filename);
+        if (owners.length < 2) {
           return;
         }
         context.report({
           node,
           loc: { line: 1, column: 0 },
           messageId: "overlap",
-          data: { aliases: claiming.map((entry) => entry.specifier).join(", ") },
+          data: { aliases: owners.map((entry) => entry.specifier).join(", ") },
         });
       },
     };

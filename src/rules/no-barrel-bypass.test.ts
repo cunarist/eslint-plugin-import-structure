@@ -63,6 +63,25 @@ testRule("no-barrel-bypass", noBarrelBypassRule, {
       ],
     },
 
+    // names the alias nested deepest under the path, not the longest prefix
+    {
+      code: 'import { x } from "#a/sub/x.ts";\n',
+      filename: fixture("nested/main.ts"),
+      errors: [
+        {
+          messageId: "bypass",
+          data: { specifier: "#a/sub/x.ts", owner: "#a-sub" },
+          suggestions: [
+            {
+              messageId: "useEntry",
+              data: { owner: "#a-sub" },
+              output: 'import { x } from "#a-sub";\n',
+            },
+          ],
+        },
+      ],
+    },
+
     // rejects a catch-all pattern, which has no entry point to suggest
     {
       code: 'import { utils } from "#/utils/index.ts";\n',

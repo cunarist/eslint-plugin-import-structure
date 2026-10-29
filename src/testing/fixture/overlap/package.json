@@ -1,11 +1,7 @@
 {
   "imports": {
-    "#a": "./a/index.ts",
-    "#a-sub": "./a/sub/index.ts",
     "#c": "./c/index.ts",
     "#c2": "./c/index.ts",
-    "#d": "./d/index.ts",
-    "#d-file": "./d/file.ts",
     "#e": "./e.ts",
     "#e2": "./e.ts"
   }
