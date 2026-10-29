@@ -15,9 +15,9 @@ area keeps exactly one public surface. Whatever the importer needs should be
 exported from the alias's target.
 
 - A `#` specifier deeper than an alias, such as `#a/one.ts` beside `#a`,
-  fires whether or not a subpath pattern makes it resolve, unless a pattern
-  sends it to a file no alias owns. The rule suggests the alias itself. It is a suggestion, not a fix: the target may not export
-  the name yet.
+  fires whether or not a subpath pattern makes it resolve. Outside the
+  area, the rule suggests the alias itself. It is a suggestion, not a fix:
+  the target may not export the name yet.
 - The suggested alias is the one that owns the file the specifier names, so
   with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past `#a-sub`.
 - No `/*` subpath patterns: a pattern fires when it resolves to a file an

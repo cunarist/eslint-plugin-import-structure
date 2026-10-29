@@ -80,7 +80,10 @@ export interface ImportsConfig {
   byTarget: Map<string, ModuleEntry>;
   /** Lookup from a bare specifier such as `#utils` to its entry. */
   bySpecifier: Map<string, ModuleEntry>;
-  /** Subpath patterns, longest prefix first. */
+  /**
+   * Subpath patterns in the order Node.js tries them: longest prefix first,
+   * then longest key, so `#a/*.js` wins over `#a/*` whatever their order.
+   */
   patterns: PatternEntry[];
 }
 
@@ -247,7 +250,10 @@ function readConfig(configPath: string, configDir: string): ImportsConfig | null
     return null;
   }
 
-  patterns.sort((left, right) => right.prefix.length - left.prefix.length);
+  patterns.sort(
+    (left, right) =>
+      right.prefix.length - left.prefix.length || right.specifier.length - left.specifier.length,
+  );
 
   return { configDir, entries, byTarget, bySpecifier, patterns };
 }

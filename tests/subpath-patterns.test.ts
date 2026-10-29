@@ -22,7 +22,8 @@ function rule(id: string): TestedRule {
 
 /**
  * A file in the `owned/` fixture project, whose `#pat/*.js` pattern sends
- * `#pat/x.js` to `a/x.ts`, owned by `#a`, and whose `#lib/*` pattern sends
+ * `#pat/x.js` to `a/x.ts`, owned by `#a`, ahead of the shorter `#pat/*`
+ * declared before it, as Node.js does, and whose `#lib/*` pattern sends
  * `#lib/f.ts` to `b/f.ts`, the target of the file alias `#f`. Its
  * `#tool/*` pattern shares the name of the file alias `#tool` but sends
  * `#tool/x.ts` to the unowned `vendor/x.ts`.
@@ -121,6 +122,7 @@ testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
 
     // inside the area, a relative path, never the area's own alias
     ownArea("#pat/sub/x.js", ONE, "./sub/x.ts"),
+    ownArea("#pat/sub/x.ts", ONE, "./sub/x.ts"),
     ownArea("#pat/two.js?raw", ONE, "./two.ts?raw"),
 
     // no suggestion where only `../`, the entry point, or the file itself fits

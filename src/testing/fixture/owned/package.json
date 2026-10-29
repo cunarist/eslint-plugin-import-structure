@@ -5,6 +5,7 @@
     "#deep": "./src/x/y/index.ts",
     "#tool": "./tools/lint.ts",
     "#gen": "./build/generated.ts",
+    "#pat/*": "./a/*",
     "#pat/*.js": "./a/*.ts",
     "#lib/*": "./b/*",
     "#tool/*": "./vendor/*"
