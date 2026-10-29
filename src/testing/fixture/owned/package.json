@@ -7,6 +7,11 @@
     "#gen": "./build/generated.ts",
     "#pat/*": "./a/*",
     "#pat/*.js": "./a/*.ts",
+    "#pat/ext/*": "ext-pkg/*",
+    "#pat/cond/*": {
+      "default": "./vendor/*"
+    },
+    "#pat/dep": "dep-pkg",
     "#lib/*": "./b/*",
     "#tool/*": "./vendor/*"
   }

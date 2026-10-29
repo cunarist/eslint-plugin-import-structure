@@ -2,10 +2,10 @@
  * Regression: a specifier names a module in any spelling TypeScript resolves
  * to it, as `nodenext` code writes `./index.js` and bundler code `./index`
  * for `./index.ts`, but never another module kind beside it, such as
- * `./f.mts` beside `f.ts`. So an own-entry cycle is caught however it is spelled, no
- * suggestion names the entry point or the importer itself, and a path to an
- * alias's target is rewritten to the alias in any spelling, unless a query
- * or fragment, which the alias cannot carry, would be lost.
+ * `./f.mts` beside `f.ts`. So an own-entry cycle is caught however it is
+ * spelled, no suggestion names the entry point or the importer itself, and
+ * a path to an alias's target is rewritten to the alias in any spelling,
+ * unless a query or fragment, which the alias cannot carry, would be lost.
  */
 
 import plugin from "#plugin";

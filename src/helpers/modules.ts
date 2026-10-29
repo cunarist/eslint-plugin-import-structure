@@ -90,9 +90,13 @@ export function findOwningEntry(config: ImportsConfig, filePath: string): Module
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   const bare = stripQuery(specifier);
+  if (config.foreignSpecifiers.has(bare)) {
+    return null;
+  }
   const pattern = findPatternEntry(config, bare);
   if (pattern !== null) {
-    return findOwningEntry(config, patternPath(config, pattern, bare));
+    const path = patternPath(config, pattern, bare);
+    return path === null ? null : findOwningEntry(config, path);
   }
   const prefix = longestAliasPrefix(config, bare);
   const path = namedPath(config, bare, prefix);
@@ -105,6 +109,9 @@ export function deeperAliasOwner(config: ImportsConfig, specifier: string): Modu
  */
 export function deeperAliasPath(config: ImportsConfig, specifier: string): string | null {
   const bare = stripQuery(specifier);
+  if (config.foreignSpecifiers.has(bare)) {
+    return null;
+  }
   return namedPath(config, bare, longestAliasPrefix(config, bare));
 }
 
@@ -139,8 +146,18 @@ function namedPath(config: ImportsConfig, bare: string, prefix: ModuleEntry | nu
   return resolveFrom(prefix.dir, `./${bare.slice(prefix.specifier.length + 1)}`);
 }
 
-/** The file a subpath pattern resolves a matching `#` specifier to. */
-function patternPath(config: ImportsConfig, pattern: PatternEntry, specifier: string): string {
+/**
+ * The file a subpath pattern resolves a matching `#` specifier to, or `null`
+ * for a pattern that leads out of the project.
+ */
+function patternPath(
+  config: ImportsConfig,
+  pattern: PatternEntry,
+  specifier: string,
+): string | null {
+  if (pattern.target === null) {
+    return null;
+  }
   const bare = stripQuery(specifier);
   const matched = bare.slice(pattern.prefix.length, bare.length - pattern.suffix.length);
   return resolveFrom(config.configDir, pattern.target.replaceAll("*", matched));
@@ -150,10 +167,15 @@ function patternPath(config: ImportsConfig, pattern: PatternEntry, specifier: st
  * Finds the subpath pattern a deep `#` specifier reaches through, such as
  * `#utils/*` for `#utils/internal.ts`. A query or fragment is ignored, so
  * `#utils/x.js?raw` still matches `#utils/*.js`. Returns `null` when none
- * match.
+ * match or an exact key, which Node.js tries first, names the specifier.
+ * The pattern found may lead out of the project, with a `null` target.
  */
 export function findPatternEntry(config: ImportsConfig, specifier: string): PatternEntry | null {
   const bare = stripQuery(specifier);
+  // An exact key, local or not, wins over every pattern.
+  if (config.bySpecifier.has(bare) || config.foreignSpecifiers.has(bare)) {
+    return null;
+  }
   for (const pattern of config.patterns) {
     if (
       bare.length >= pattern.prefix.length + pattern.suffix.length &&

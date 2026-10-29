@@ -40,6 +40,10 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   `./index` name `index.ts`, `.mjs` names `.mts`, `.cjs` `.cts`; `./f.mts`
   never names `f.ts`. Ownership (`ownsPath`) stays exact: a linted file is
   a real file, not a specifier.
+- **Non-local `#` keys keep Node.js precedence** (v0.11.1): a pattern to a
+  package or a condition object is kept with `target: null`
+  (`comparePatterns` sorts all patterns), an exact one goes in
+  `foreignSpecifiers`; both shadow shorter local patterns and name no file.
 - **A `?query`/`#fragment` blocks alias rewrites**: an alias can't carry
   one (`#f?raw` is no `imports` key), so `prefer-alias-import` and
   `no-parent-import` report it without a fix and `no-barrel-bypass` offers

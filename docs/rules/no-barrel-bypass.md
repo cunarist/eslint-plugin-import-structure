@@ -32,6 +32,10 @@ exported from the alias's target.
   the entry point nor the importer, in any spelling TypeScript resolves to
   them, such as `.js` for `.ts`.
 - A query or fragment suffix, such as `?raw`, is ignored when matching.
+- Keys are matched in Node.js order: an exact key first, then the pattern
+  with the longest prefix. A key that leads to a package or through
+  conditions, such as `"#a/ext/*": "ext-pkg/*"`, takes part in that order
+  but names no file, so specifiers it matches never fire.
 - See [Modules](../../README.md#modules) for the whole rule.
 
 Examples of **incorrect** code for this rule:

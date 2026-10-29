@@ -135,15 +135,19 @@ export const noBarrelBypassRule: ExplicitRule = {
         return;
       }
       const config = findImportsConfig(context.filename);
-      if (config === null || config.bySpecifier.has(stripQuery(specifier))) {
+      const bare = stripQuery(specifier);
+      if (config === null || config.bySpecifier.has(bare) || config.foreignSpecifiers.has(bare)) {
         return;
       }
       const owner = deeperAliasOwner(config, specifier);
       if (owner === null) {
         // A pattern into files no alias owns, such as a catch-all "#/*",
         // still makes files reachable from an owned area.
+        // A pattern into a package or through conditions names no file.
+        const pattern = findPatternEntry(config, specifier);
         if (
-          findPatternEntry(config, specifier) !== null &&
+          pattern !== null &&
+          pattern.target !== null &&
           isInModuleScope(context.filename, specifier)
         ) {
           context.report({ node, messageId: "internals", data: { specifier } });

@@ -5,7 +5,8 @@
  * "./a/*.ts"` reaches past `#a`, and the layer order applies to it. Inside
  * the area, the alias is never suggested; a `./` path is, when one exists.
  * A pattern into files no alias owns is credited to no alias, whatever its
- * name.
+ * name. A key that leads to a package or through conditions still wins over
+ * shorter patterns, as in Node.js, and names no file.
  */
 
 import plugin from "#plugin";
@@ -41,6 +42,9 @@ const DEEP = owned("a/sub/deep.ts");
 const FILE_ALIAS = owned("b/f.ts");
 
 const TOOL = owned("tools/lint.ts");
+
+/** Specifiers that `#pat/ext/*`, `#pat/cond/*`, and `#pat/dep` lead out. */
+const FOREIGN = ["#pat/ext/x.js", "#pat/cond/x.ts", "#pat/dep"];
 
 /** One import of `specifier`, linted as `filename`. */
 function importing(specifier: string, filename: string): { code: string; filename: string } {
@@ -103,6 +107,10 @@ testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
 
     // a pattern into unowned files, from an unowned file, whatever its name
     importing("#tool/x.ts", MAIN),
+
+    // a key out of the project wins over `#pat/*` and names no file
+    ...FOREIGN.map((specifier) => importing(specifier, ONE)),
+    ...FOREIGN.map((specifier) => importing(specifier, MAIN)),
   ],
   invalid: [
     // a pattern with no exact alias of its name reaches past the file's owner
@@ -148,6 +156,9 @@ testRule("enforce-layer-order", rule("enforce-layer-order"), {
 
     // a pattern into unowned files has no layer
     importing("#tool/x.ts", ONE),
+
+    // nor does a key out of the project, though `#pat/*` would reach `#a`
+    ...FOREIGN.map((specifier) => importing(specifier, FILE_ALIAS)),
   ],
   invalid: [
     // `#f` is declared below `#a`, through a pattern or a query alike
@@ -168,4 +179,10 @@ testRule("enforce-layer-order", rule("enforce-layer-order"), {
       errors: [{ messageId: "ownEntry", data: { owner: "#a", specifier: "./index.ts?raw" } }],
     },
   ],
+});
+
+testRule("no-self-import", rule("no-self-import"), {
+  // `#pat/dep` leads to a package, not to `a/dep.ts` through `#pat/*`
+  valid: [importing("#pat/dep", owned("a/dep.ts"))],
+  invalid: [{ ...importing("#pat/one", ONE), errors: [{ messageId: "selfImport" }] }],
 });

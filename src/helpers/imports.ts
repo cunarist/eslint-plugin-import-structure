@@ -66,8 +66,12 @@ export interface PatternEntry {
   prefix: string;
   /** The key after its `*`, usually empty. */
   suffix: string;
-  /** The target as written, such as `./src/utils/*`. */
-  target: string;
+  /**
+   * The target as written, such as `./src/utils/*`, or `null` when the key
+   * leads out of the project, to a package or through conditions. Such a
+   * pattern still wins over shorter ones, as in Node.js, and names no file.
+   */
+  target: string | null;
 }
 
 /** The `#`-prefixed portion of a `package.json` `imports` map. */
@@ -80,6 +84,11 @@ export interface ImportsConfig {
   byTarget: Map<string, ModuleEntry>;
   /** Lookup from a bare specifier such as `#utils` to its entry. */
   bySpecifier: Map<string, ModuleEntry>;
+  /**
+   * Exact `#` keys that lead out of the project, to a package or through
+   * conditions. They win over every pattern, as in Node.js, and name no file.
+   */
+  foreignSpecifiers: Set<string>;
   /**
    * Subpath patterns in the order Node.js tries them: longest prefix first,
    * then longest key, so `#a/*.js` wins over `#a/*` whatever their order.
@@ -173,7 +182,7 @@ function readImportsField(configPath: string): object | null {
 /**
  * Whether an `imports` entry is a `#` alias with a relative string target.
  * Only those point at local files. A "#" alias for a package, or a condition
- * object, is legitimate but irrelevant here.
+ * object, names no file here but still takes part in Node.js precedence.
  */
 function isLocalEntry(specifier: string, value: unknown): value is string {
   return (
@@ -184,7 +193,7 @@ function isLocalEntry(specifier: string, value: unknown): value is string {
 }
 
 /** A subpath pattern entry, split around the `*` at index `star`. */
-function patternEntry(specifier: string, star: number, target: string): PatternEntry {
+function patternEntry(specifier: string, star: number, target: string | null): PatternEntry {
   return {
     specifier,
     prefix: specifier.slice(0, star),
@@ -212,48 +221,62 @@ function moduleEntry(
 }
 
 /**
- * Reads and parses one config file. Returns `null` when the file
- * is unreadable, is not JSON, or has no local `#` entries.
+ * The order Node.js tries subpath patterns in: longest prefix first, then
+ * longest key.
+ */
+export function comparePatterns(left: PatternEntry, right: PatternEntry): number {
+  return right.prefix.length - left.prefix.length || right.specifier.length - left.specifier.length;
+}
+
+/**
+ * Adds one `imports` key to a config being built: a pattern, local or not, a
+ * foreign exact key, or a local exact entry.
+ */
+function addImport(config: ImportsConfig, specifier: string, value: unknown): void {
+  const local = isLocalEntry(specifier, value) ? value : null;
+  const star = specifier.indexOf("*");
+  if (star !== -1) {
+    config.patterns.push(patternEntry(specifier, star, local));
+    return;
+  }
+  if (local === null) {
+    config.foreignSpecifiers.add(specifier);
+    return;
+  }
+  const entry = moduleEntry(config.configDir, specifier, local, config.entries.length);
+  config.entries.push(entry);
+  config.bySpecifier.set(specifier, entry);
+  // First declaration wins when two specifiers share a target.
+  if (!config.byTarget.has(entry.target)) {
+    config.byTarget.set(entry.target, entry);
+  }
+}
+
+/**
+ * Reads and parses one config file. Returns `null` when the file is
+ * unreadable, is not JSON, or has no local `#` entries.
  */
 function readConfig(configPath: string, configDir: string): ImportsConfig | null {
   const imports = readImportsField(configPath);
   if (imports === null) {
     return null;
   }
-
-  const entries: ModuleEntry[] = [];
-  const byTarget: Map<string, ModuleEntry> = new Map();
-  const bySpecifier: Map<string, ModuleEntry> = new Map();
-  const patterns: PatternEntry[] = [];
-
+  const config: ImportsConfig = {
+    configDir,
+    entries: [],
+    byTarget: new Map(),
+    bySpecifier: new Map(),
+    foreignSpecifiers: new Set(),
+    patterns: [],
+  };
   for (const [specifier, value] of Object.entries(imports)) {
-    if (!isLocalEntry(specifier, value)) {
-      continue;
-    }
-
-    const star = specifier.indexOf("*");
-    if (star !== -1) {
-      patterns.push(patternEntry(specifier, star, value));
-      continue;
-    }
-
-    const entry = moduleEntry(configDir, specifier, value, entries.length);
-    entries.push(entry);
-    bySpecifier.set(specifier, entry);
-    // First declaration wins when two specifiers share a target.
-    if (!byTarget.has(entry.target)) {
-      byTarget.set(entry.target, entry);
+    if (specifier.startsWith("#")) {
+      addImport(config, specifier, value);
     }
   }
-
-  if (entries.length === 0 && patterns.length === 0) {
+  if (config.entries.length === 0 && config.patterns.every((pattern) => pattern.target === null)) {
     return null;
   }
-
-  patterns.sort(
-    (left, right) =>
-      right.prefix.length - left.prefix.length || right.specifier.length - left.specifier.length,
-  );
-
-  return { configDir, entries, byTarget, bySpecifier, patterns };
+  config.patterns.sort(comparePatterns);
+  return config;
 }

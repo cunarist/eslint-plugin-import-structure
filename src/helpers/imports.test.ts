@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { stripQuery } from "./imports.ts";
+import { comparePatterns, type PatternEntry, stripQuery } from "./imports.ts";
 
 describe("stripQuery", () => {
   it("drops a query or fragment after a # specifier, keeping its leading #", () => {
@@ -16,5 +16,27 @@ describe("stripQuery", () => {
 
   it("drops a query and fragment after a relative specifier", () => {
     expect(stripQuery("./x.ts?raw#h")).toBe("./x.ts");
+  });
+});
+
+/** A pattern entry for `specifier`, split at its `*`. */
+function pattern(specifier: string, target: string | null): PatternEntry {
+  const star = specifier.indexOf("*");
+  return {
+    specifier,
+    prefix: specifier.slice(0, star),
+    suffix: specifier.slice(star + 1),
+    target,
+  };
+}
+
+describe("comparePatterns", () => {
+  it("orders by longest prefix, then longest key, local or not", () => {
+    const sorted = [
+      pattern("#a/*", "./a/*"),
+      pattern("#a/*.js", "./a/*.ts"),
+      pattern("#a/ext/*", null),
+    ].toSorted(comparePatterns);
+    expect(sorted.map((entry) => entry.specifier)).toStrictEqual(["#a/ext/*", "#a/*.js", "#a/*"]);
   });
 });
