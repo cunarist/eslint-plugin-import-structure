@@ -25,12 +25,15 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   (`deeperAliasOwner` credits the owner of the file the specifier names:
   through a matching `/*` pattern if any, else the rest read as a path in
   the prefix alias's folder, even one that climbs out of it), and parent/child obey the layer order like any
-  other pair. Since v0.11.1 a `/*` pattern with no same-name alias (`"#lib/*"`
-  alone) is credited the same way, and a `?query`/`#fragment` is stripped
-  (`stripQuery`) before any pattern or alias lookup.
+  other pair. Since v0.11.1 a matching `/*` pattern alone decides the owner,
+  whatever its name (a lone `"#lib/*"` is credited to the named file's
+  owner; a pattern into unowned files to no alias, never its namesake), and
+  a `?query`/`#fragment` is stripped (`stripQuery`) before any lookup.
 - **Inside its own area, `no-barrel-bypass` never suggests the area's alias**
   (that is `enforce-layer-order`'s `ownEntry` cycle); it reports `ownArea`
-  and suggests the `./` path when one exists without `../`.
+  and suggests the `./` path when one exists without `../`;
+  `enforce-layer-order` reports `ownEntry` there only when the specifier
+  names the area's entry point.
 - **No 2 aliases on the same area** (same target, or 2 index files in one
   folder). `enforce-layer-order`
   reports it once at the top of every file both own; other rules count the

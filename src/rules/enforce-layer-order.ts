@@ -1,14 +1,30 @@
 import type { TSESTree } from "@typescript-eslint/types";
 
 import {
+  deeperAliasPath,
   docsUrl,
   type ExplicitRule,
   findImportsConfig,
   findOwningEntry,
+  type ImportsConfig,
+  type ModuleEntry,
   owningEntries,
   resolveTarget,
+  stripQuery,
   visitSpecifiers,
 } from "#helpers";
+
+/**
+ * Whether a specifier resolved to its importer's own area names that area's
+ * entry point. A deeper `#` specifier to any other file of the area is no
+ * cycle; `no-barrel-bypass` reports it and suggests a relative path.
+ */
+function namesOwnEntry(config: ImportsConfig, specifier: string, owner: ModuleEntry): boolean {
+  if (!specifier.startsWith("#") || config.bySpecifier.has(stripQuery(specifier))) {
+    return true;
+  }
+  return deeperAliasPath(config, specifier) === owner.target;
+}
 
 /**
  * `enforce-layer-order` - treats the order of `#` aliases in `package.json`
@@ -52,6 +68,9 @@ export const enforceLayerOrderRule: ExplicitRule = {
         return;
       }
       if (target.index === owner.index) {
+        if (!namesOwnEntry(config, specifier, owner)) {
+          return;
+        }
         context.report({
           node,
           messageId: "ownEntry",

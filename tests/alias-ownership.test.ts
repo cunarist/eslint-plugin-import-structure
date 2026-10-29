@@ -25,7 +25,7 @@ function rule(id: string): TestedRule {
  * `#f` (a file next to unowned ones), `#deep` (a folder three levels down),
  * `#tool` (a file in another top-level folder), and `#gen` (a file that
  * does not exist, like build output). Its `#pat/*.js` and `#lib/*` patterns
- * have no exact alias of their own.
+ * have no exact alias of their own, and `#tool/*` leads to unowned files.
  */
 function owned(path: string): string {
   return fixture(`owned/${path}`);

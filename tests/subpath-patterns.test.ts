@@ -4,6 +4,8 @@
  * string after the specifier. So `#pat/x.js?raw` under `"#pat/*.js":
  * "./a/*.ts"` reaches past `#a`, and the layer order applies to it. Inside
  * the area, the alias is never suggested; a `./` path is, when one exists.
+ * A pattern into files no alias owns is credited to no alias, whatever its
+ * name.
  */
 
 import plugin from "#plugin";
@@ -21,7 +23,9 @@ function rule(id: string): TestedRule {
 /**
  * A file in the `owned/` fixture project, whose `#pat/*.js` pattern sends
  * `#pat/x.js` to `a/x.ts`, owned by `#a`, and whose `#lib/*` pattern sends
- * `#lib/f.ts` to `b/f.ts`, the target of the file alias `#f`.
+ * `#lib/f.ts` to `b/f.ts`, the target of the file alias `#f`. Its
+ * `#tool/*` pattern shares the name of the file alias `#tool` but sends
+ * `#tool/x.ts` to the unowned `vendor/x.ts`.
  */
 function owned(path: string): string {
   return fixture(`owned/${path}`);
@@ -34,6 +38,8 @@ const ONE = owned("a/one.ts");
 const DEEP = owned("a/sub/deep.ts");
 
 const FILE_ALIAS = owned("b/f.ts");
+
+const TOOL = owned("tools/lint.ts");
 
 /** One import of `specifier`, linted as `filename`. */
 function importing(specifier: string, filename: string): { code: string; filename: string } {
@@ -87,14 +93,31 @@ function ownArea(specifier: string, filename: string, path: string | null): Inva
 }
 
 testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
-  valid: [importing("#a?raw", MAIN), importing("#lib/g.ts", MAIN)],
+  valid: [
+    importing("#a?raw", MAIN),
+    importing("#lib/g.ts", MAIN),
+
+    // a pattern into unowned files, from an unowned file, whatever its name
+    importing("#tool/x.ts", MAIN),
+  ],
   invalid: [
     // a pattern with no exact alias of its name reaches past the file's owner
     bypass("#pat/x.js", "#a"),
     bypass("#lib/f.ts", "#f"),
 
-    // a query string does not stop the pattern from matching
+    // a query string or fragment does not stop the pattern from matching
     bypass("#pat/x.js?raw", "#a"),
+    bypass("#pat/x.js#frag", "#a"),
+
+    // a pattern into unowned files is credited to no alias, not its namesake
+    {
+      ...importing("#tool/x.ts", TOOL),
+      errors: [{ messageId: "internals", data: { specifier: "#tool/x.ts" }, suggestions: [] }],
+    },
+    {
+      ...importing("#tool/x.ts", ONE),
+      errors: [{ messageId: "internals", data: { specifier: "#tool/x.ts" }, suggestions: [] }],
+    },
 
     // inside the area, a relative path, never the area's own alias
     ownArea("#pat/sub/x.js", ONE, "./sub/x.ts"),
@@ -112,6 +135,14 @@ testRule("enforce-layer-order", rule("enforce-layer-order"), {
     // `#a` is declared above `#f`, so it may import `#f` by any spelling
     importing("#lib/f.ts", ONE),
     importing("#lib/f.ts?raw", ONE),
+
+    // a deep specifier to a non-entry file of the own area is no cycle; it is
+    // left to no-barrel-bypass
+    importing("#pat/sub/x.js", ONE),
+    importing("#a/two.ts", ONE),
+
+    // a pattern into unowned files has no layer
+    importing("#tool/x.ts", ONE),
   ],
   invalid: [
     // `#f` is declared below `#a`, through a pattern or a query alike
@@ -122,6 +153,10 @@ testRule("enforce-layer-order", rule("enforce-layer-order"), {
     {
       ...importing("#pat/x.js?raw", FILE_ALIAS),
       errors: [{ messageId: "upward", data: { owner: "#f", target: "#a" } }],
+    },
+    {
+      ...importing("#pat/index.js", ONE),
+      errors: [{ messageId: "ownEntry", data: { owner: "#a", specifier: "#pat/index.js" } }],
     },
     {
       ...importing("./index.ts?raw", ONE),

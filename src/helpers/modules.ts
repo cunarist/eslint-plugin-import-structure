@@ -78,18 +78,22 @@ export function findOwningEntry(config: ImportsConfig, filePath: string): Module
 
 /**
  * The alias a deeper `#` specifier reaches past, such as `#utils` for
- * `#utils/internal.ts`, whether or not a subpath pattern makes it resolve.
- * It is the owner of the file the specifier names: the file a matching
- * subpath pattern resolves to, or else, under a folder alias prefix, the rest
- * of the specifier read as a path in that folder. So `#a/sub/x.ts` reaches
- * past `#a-sub` when that alias owns `a/sub/`, and `#lib/x.ts` under a lone
- * `"#lib/*"` pattern reaches past whichever alias owns the file it names. A
- * named file no alias owns falls back to the longest alias prefix. Returns
- * `null` when no alias owns the named file and none is a prefix. A query or
- * fragment is ignored.
+ * `#utils/internal.ts`. It is the owner of the file the specifier names. A
+ * matching subpath pattern decides that file alone, whatever its name, so
+ * `#lib/x.ts` under a lone `"#lib/*"` pattern reaches past whichever alias
+ * owns the file it resolves to, and a pattern into files no alias owns gives
+ * `null`. With no pattern, the rest of the specifier is read as a path in
+ * the folder of the longest alias prefix, so `#a/sub/x.ts` reaches past
+ * `#a-sub` when that alias owns `a/sub/`; a file alias prefix, or a path
+ * that climbs out of the folder to a file no alias owns, falls back to the
+ * prefix itself. A query or fragment is ignored.
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   const bare = stripQuery(specifier);
+  const pattern = findPatternEntry(config, bare);
+  if (pattern !== null) {
+    return findOwningEntry(config, patternPath(config, pattern, bare));
+  }
   const prefix = longestAliasPrefix(config, bare);
   const path = namedPath(config, bare, prefix);
   return (path === null ? null : findOwningEntry(config, path)) ?? prefix;

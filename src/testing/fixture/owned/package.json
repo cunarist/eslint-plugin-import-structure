@@ -6,6 +6,7 @@
     "#tool": "./tools/lint.ts",
     "#gen": "./build/generated.ts",
     "#pat/*.js": "./a/*.ts",
-    "#lib/*": "./b/*"
+    "#lib/*": "./b/*",
+    "#tool/*": "./vendor/*"
   }
 }

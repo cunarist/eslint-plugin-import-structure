@@ -37,10 +37,13 @@ detectable, and the `imports` map doubles as documentation of the layers.
 - A target is resolved whether it is written as an exact alias, a deeper
   specifier such as `#components/x.ts`, or a relative path to an alias's
   target. A specifier a `/*` subpath pattern matches belongs to the alias
-  that owns the file it resolves to, even when no alias shares the
-  pattern's name. A query or fragment suffix, such as `?raw`, is ignored.
-- A file importing its own area's alias fires too, since that is a cycle
-  waiting to happen. Use a relative import of the sibling file instead.
+  that owns the file it resolves to, whatever the pattern's name, and to no
+  alias when none owns that file. A query or fragment suffix, such as
+  `?raw`, is ignored.
+- A file importing its own area's alias, or a path or deeper specifier to
+  its entry point, fires too, since that is a cycle waiting to happen. Use a
+  relative import of the sibling file instead. A deeper specifier to any
+  other file of the own area is no cycle and is left to `no-barrel-bypass`.
 - To fix an upward import, either reorder the two aliases or move the shared
   code into an area declared below both.
 

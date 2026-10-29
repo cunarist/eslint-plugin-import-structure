@@ -15,16 +15,16 @@ area keeps exactly one public surface. Whatever the importer needs should be
 exported from the alias's target.
 
 - A `#` specifier deeper than an alias, such as `#a/one.ts` beside `#a`,
-  fires whether or not a subpath pattern makes it resolve. The rule suggests
-  the alias itself. It is a suggestion, not a fix: the target may not export
+  fires whether or not a subpath pattern makes it resolve, unless a pattern
+  sends it to a file no alias owns. The rule suggests the alias itself. It is a suggestion, not a fix: the target may not export
   the name yet.
 - The suggested alias is the one that owns the file the specifier names, so
   with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past `#a-sub`.
-- No `/*` subpath patterns: a pattern fires when it names a file an alias
-  owns, even with no exact alias of its own name, and suggests that owner,
-  so a catch-all `"#/*": "./src/*"` makes `#/utils/x.ts` reach past
-  `#utils`. A pattern into files no alias owns fires when it is used from an
-  owned area, with no alias to suggest.
+- No `/*` subpath patterns: a pattern fires when it resolves to a file an
+  alias owns, whatever the pattern's name, and suggests that owner, so a
+  catch-all `"#/*": "./src/*"` makes `#/utils/x.ts` reach past `#utils`. A
+  pattern into files no alias owns, even one named like an alias, fires
+  when it is used from an owned area, with no alias to suggest.
 - Inside an area, the area's own alias is never suggested, since importing
   it is a cycle (`enforce-layer-order`). The rule suggests the `./` path to
   the file instead, when one exists without `../`.
