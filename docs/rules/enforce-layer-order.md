@@ -36,13 +36,13 @@ detectable, and the `imports` map doubles as documentation of the layers.
   them. Merge the aliases.
 - A target is resolved whether it is written as an exact alias, a deeper
   specifier such as `#components/x.ts`, or a relative path to an alias's
-  target. A specifier a `/*` subpath pattern matches belongs to the alias
-  that owns the file it resolves to, whatever the pattern's name. It
-  belongs to no alias when no alias owns that file, or when the pattern
-  leads to a package or through conditions. A query or fragment suffix,
-  such as `?raw`, is ignored, and a path names a file in any spelling
-  TypeScript resolves to it, so `./index.js` and `./index` name
-  `./index.ts`.
+  target. A path names a file in any spelling TypeScript resolves to it,
+  in TypeScript's order, so `./index.js` and `./index` name `./index.ts`.
+  A specifier a `/*` subpath pattern matches belongs to the alias whose
+  target the file it resolves to is, else to the alias that owns that
+  file, whatever the pattern's name. It belongs to no alias when no alias
+  owns that file, or when the pattern leads to a package or through
+  conditions. A query or fragment suffix, such as `?raw`, is ignored.
 - A file importing its own area's alias, or a path or deeper specifier to
   its entry point, fires too, since that is a cycle waiting to happen. Use a
   relative import of the sibling file instead. A deeper specifier to any

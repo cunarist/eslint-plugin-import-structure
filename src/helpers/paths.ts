@@ -93,18 +93,22 @@ export function childSpecifier(fromDir: string, path: string): string | null {
     : null;
 }
 
-/** The extensions a specifier without one may resolve to. */
-const BARE_EXTENSIONS: Set<string> = new Set([".ts", ".tsx", ".js", ".jsx"]);
+/** The extensions a specifier without one may resolve to, in TypeScript's order. */
+const BARE_EXTENSIONS: string[] = [".ts", ".tsx", ".js", ".jsx"];
 
 /**
- * The source extensions a specifier's extension stands for, as TypeScript
- * maps them: `./x.js` names `x.ts`, `./x.mjs` names `x.mts`, and so on.
+ * The source extensions a specifier's extension stands for, in the order
+ * TypeScript tries them: `./x.js` names `x.ts`, then `x.tsx`, and so on.
  */
-const SOURCE_EXTENSIONS: Map<string, Set<string>> = new Map([
-  [".js", new Set([".ts", ".tsx"])],
-  [".jsx", new Set([".tsx"])],
-  [".mjs", new Set([".mts"])],
-  [".cjs", new Set([".cts"])],
+const SOURCE_EXTENSIONS: Map<string, string[]> = new Map([
+  [".js", [".ts", ".tsx"]],
+  [".jsx", [".tsx"]],
+  [".mjs", [".mts"]],
+  [".cjs", [".cts"]],
+  [".ts", []],
+  [".tsx", []],
+  [".mts", []],
+  [".cts", []],
 ]);
 
 /** The last extension of a path's last segment, or `""` when it has none. */
@@ -114,25 +118,28 @@ function extensionOf(path: string): string {
 }
 
 /**
+ * The files a resolved specifier path may name, in the order TypeScript
+ * tries them: the path itself, then the source files of a script extension
+ * (`./x.js` gives `x.ts` and `x.tsx`, `./x.mjs` gives `x.mts`), or, for a
+ * path without a script extension, the path with `.ts`, `.tsx`, `.js`, or
+ * `.jsx` added.
+ */
+export function moduleCandidates(path: string): string[] {
+  const extension = extensionOf(path);
+  const sources = SOURCE_EXTENSIONS.get(extension);
+  if (sources === undefined) {
+    return [path, ...BARE_EXTENSIONS.map((added) => path + added)];
+  }
+  const stem = path.slice(0, path.length - extension.length);
+  return [path, ...sources.map((source) => stem + source)];
+}
+
+/**
  * Whether a resolved specifier path names the module file `file`, the way
- * TypeScript resolves it: the exact path, the path without an extension for
- * a `.ts`, `.tsx`, `.js`, or `.jsx` file, or the path with the output
- * extension of the file's source one, such as `./index.js` for `index.ts`
- * or `./x.mjs` for `x.mts`. One-directional: `./x.mts` never names `x.ts`,
- * and another extension, such as `index.css`, names another file.
+ * TypeScript resolves it (`moduleCandidates`). One-directional: `./x.mts`
+ * never names `x.ts`, and another extension, such as `index.css`, names
+ * another file.
  */
 export function namesSameModule(path: string, file: string): boolean {
-  if (path === file) {
-    return true;
-  }
-  const fileExtension = extensionOf(file);
-  const fileStem = file.slice(0, file.length - fileExtension.length);
-  if (path === fileStem) {
-    return BARE_EXTENSIONS.has(fileExtension);
-  }
-  const extension = extensionOf(path);
-  return (
-    path.slice(0, path.length - extension.length) === fileStem &&
-    SOURCE_EXTENSIONS.get(extension)?.has(fileExtension) === true
-  );
+  return moduleCandidates(path).includes(file);
 }

@@ -21,7 +21,7 @@ import {
   SLASHED_DRIVE_PATTERN,
   stripQuery,
 } from "./imports.ts";
-import { isInsideDir, namesSameModule, normalizePath, parentDir, resolveFrom } from "./paths.ts";
+import { isInsideDir, moduleCandidates, normalizePath, parentDir, resolveFrom } from "./paths.ts";
 
 /**
  * Whether a normalized path lies in the area an alias owns. A folder alias's
@@ -78,15 +78,13 @@ export function findOwningEntry(config: ImportsConfig, filePath: string): Module
 
 /**
  * The alias a deeper `#` specifier reaches past, such as `#utils` for
- * `#utils/internal.ts`. It is the owner of the file the specifier names. A
- * matching subpath pattern decides that file alone, whatever its name, so
- * `#lib/x.ts` under a lone `"#lib/*"` pattern reaches past whichever alias
- * owns the file it resolves to, and a pattern into files no alias owns gives
- * `null`. With no pattern, the rest of the specifier is read as a path in
- * the folder of the longest alias prefix, so `#a/sub/x.ts` reaches past
- * `#a-sub` when that alias owns `a/sub/`; a file alias prefix, or a path
- * that climbs out of the folder to a file no alias owns, falls back to the
- * prefix itself. A query or fragment is ignored.
+ * `#utils/internal.ts`: the alias whose target the named file is, in any
+ * spelling, else the owner of its area. A matching subpath pattern alone
+ * names the file, whatever its name; one into unowned files or out of the
+ * project gives `null`. With no pattern, the rest is read as a path in the
+ * folder of the longest alias prefix (`#a/sub/x.ts` reaches past `#a-sub`
+ * when it owns `a/sub/`), falling back to that prefix. A query or fragment
+ * is ignored.
  */
 export function deeperAliasOwner(config: ImportsConfig, specifier: string): ModuleEntry | null {
   const bare = stripQuery(specifier);
@@ -96,11 +94,11 @@ export function deeperAliasOwner(config: ImportsConfig, specifier: string): Modu
   const pattern = findPatternEntry(config, bare);
   if (pattern !== null) {
     const path = patternPath(config, pattern, bare);
-    return path === null ? null : findOwningEntry(config, path);
+    return ownerOfNamed(config, path);
   }
   const prefix = longestAliasPrefix(config, bare);
   const path = namedPath(config, bare, prefix);
-  return (path === null ? null : findOwningEntry(config, path)) ?? prefix;
+  return ownerOfNamed(config, path) ?? prefix;
 }
 
 /**
@@ -254,16 +252,24 @@ export function resolveTarget(
 }
 
 /**
- * The alias whose target a resolved path names, by its exact path or as
- * `./index.js` or `./index` names `./index.ts`; the first declared when two
- * aliases share a target. Returns `null` when the path names no target.
+ * The alias whose target a resolved path names, trying the files it may name
+ * in TypeScript's order (`moduleCandidates`), so `./x.js` names `x.ts` before
+ * `x.tsx`; the first declared when two aliases share a target. Returns
+ * `null` when the path names no target.
  */
 export function entryAt(config: ImportsConfig, path: string): ModuleEntry | null {
-  return (
-    config.byTarget.get(path) ??
-    config.entries.find((entry) => namesSameModule(path, entry.target)) ??
-    null
-  );
+  for (const candidate of moduleCandidates(path)) {
+    const entry = config.byTarget.get(candidate);
+    if (entry !== undefined) {
+      return entry;
+    }
+  }
+  return null;
+}
+
+/** The alias whose target a specifier path names, else its area's owner. */
+function ownerOfNamed(config: ImportsConfig, path: string | null): ModuleEntry | null {
+  return path === null ? null : (entryAt(config, path) ?? findOwningEntry(config, path));
 }
 
 /** Whether a path lies in the area some alias owns. */

@@ -38,8 +38,12 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   `namesSameModule(specifierPath, file)`, one-directional, used by `entryAt`,
   `ownEntry`, `no-self-import`, suggestion guards): `./index.js` and
   `./index` name `index.ts`, `.mjs` names `.mts`, `.cjs` `.cts`; `./f.mts`
-  never names `f.ts`. Ownership (`ownsPath`) stays exact: a linted file is
-  a real file, not a specifier.
+  never names `f.ts`. `moduleCandidates` gives TypeScript's try order, and
+  `entryAt` takes the first candidate with an alias, so `./c/x` picks `x.ts`
+  over `x.tsx`. `deeperAliasOwner` also tries `entryAt` before area
+  ownership. Ownership of a linted file (`ownsPath`) stays exact.
+- **Any `..` segment is a parent import** (`isParentSpecifier`):
+  `./sub/../../x.ts` belongs to `no-parent-import`, not the `./` rules.
 - **Non-local `#` keys keep Node.js precedence** (v0.11.1): a pattern to a
   package or a condition object is kept with `target: null`
   (`comparePatterns` sorts all patterns), an exact one goes in

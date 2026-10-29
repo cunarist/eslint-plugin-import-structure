@@ -6,6 +6,7 @@ import {
   type ExplicitRule,
   findImportsConfig,
   isOwnedBy,
+  isParentSpecifier,
   quoteLike,
   resolveLocalSpecifier,
   stripQuery,
@@ -38,7 +39,7 @@ export const preferAliasImportRule: ExplicitRule = {
     return visitSpecifiers((node, specifier) => {
       // Parent specifiers are banned outright by "no-parent-import", which
       // already offers this same rewrite.
-      if (!specifier.startsWith("./")) {
+      if (!specifier.startsWith("./") || isParentSpecifier(specifier)) {
         return;
       }
       const config = findImportsConfig(context.filename);

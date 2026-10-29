@@ -19,8 +19,10 @@ exported from the alias's target.
   area, the rule suggests the alias itself, unless the specifier has a query
   or fragment the alias cannot carry. It is a suggestion, not a fix: the
   target may not export the name yet.
-- The suggested alias is the one that owns the file the specifier names, so
-  with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past `#a-sub`.
+- The suggested alias is the one whose target the specifier names, in any
+  spelling TypeScript resolves to it, or else the one that owns the named
+  file, so with `#a-sub` owning `a/sub/`, `#a/sub/x.ts` reaches past
+  `#a-sub`.
 - No `/*` subpath patterns: a pattern fires when it resolves to a file an
   alias owns, whatever the pattern's name, and suggests that owner, so a
   catch-all `"#/*": "./src/*"` makes `#/utils/x.ts` reach past `#utils`. A

@@ -4,6 +4,7 @@ import {
   baseName,
   childSpecifier,
   isInsideDir,
+  moduleCandidates,
   namesSameModule,
   normalizePath,
   parentDir,
@@ -101,5 +102,20 @@ describe("namesSameModule", () => {
     expect(namesSameModule("/a/one.ts", "/a/index.ts")).toBe(false);
     expect(namesSameModule("/b/index.ts", "/a/index.ts")).toBe(false);
     expect(namesSameModule("/a.js/index", "/a/index.ts")).toBe(false);
+  });
+});
+
+describe("moduleCandidates", () => {
+  it("lists the files a specifier may name in TypeScript's order", () => {
+    expect(moduleCandidates("/c/x")).toStrictEqual([
+      "/c/x",
+      "/c/x.ts",
+      "/c/x.tsx",
+      "/c/x.js",
+      "/c/x.jsx",
+    ]);
+    expect(moduleCandidates("/c/x.js")).toStrictEqual(["/c/x.js", "/c/x.ts", "/c/x.tsx"]);
+    expect(moduleCandidates("/c/x.mjs")).toStrictEqual(["/c/x.mjs", "/c/x.mts"]);
+    expect(moduleCandidates("/c/x.ts")).toStrictEqual(["/c/x.ts"]);
   });
 });

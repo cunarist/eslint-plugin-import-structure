@@ -21,6 +21,26 @@ testRule("no-parent-import", noParentImportRule, {
     },
   ],
   invalid: [
+    // rejects a ".." segment anywhere in a relative specifier
+    {
+      code: 'import { x } from "./../x.ts";\n',
+      filename: COMPONENTS,
+      errors: [{ messageId: "parentImport", data: { specifier: "./../x.ts" } }],
+    },
+    {
+      code: 'import { x } from "./sub/../../x.ts";\n',
+      filename: COMPONENTS,
+      errors: [{ messageId: "parentImport", data: { specifier: "./sub/../../x.ts" } }],
+    },
+    {
+      code: 'import { utils } from "./../utils/index.ts";\n',
+      filename: COMPONENTS,
+      output: 'import { utils } from "#utils";\n',
+      errors: [
+        { messageId: "useAlias", data: { specifier: "./../utils/index.ts", alias: "#utils" } },
+      ],
+    },
+
     // replaces a parent import with its "#" entry
     {
       code: parentCode,

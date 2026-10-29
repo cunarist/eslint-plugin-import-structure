@@ -15,7 +15,8 @@ instead of a name: moving either breaks the import, and nothing marks the
 target as something meant to be imported. Anything above a file is reached
 through an alias.
 
-- Any specifier starting with `../` fires, in every file, whether an alias
+- Any specifier starting with `../`, or any relative specifier with a `..`
+  segment such as `./sub/../../x.ts`, fires, in every file, whether an alias
   owns it or not, and in every import, re-export, dynamic `import()`, and
   type-level `import("...")`.
 - When the nearest `package.json` has an alias that points at the same

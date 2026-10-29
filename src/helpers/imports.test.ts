@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { comparePatterns, type PatternEntry, stripQuery } from "./imports.ts";
+import { comparePatterns, isParentSpecifier, type PatternEntry, stripQuery } from "./imports.ts";
 
 describe("stripQuery", () => {
   it("drops a query or fragment after a # specifier, keeping its leading #", () => {
@@ -38,5 +38,21 @@ describe("comparePatterns", () => {
       pattern("#a/ext/*", null),
     ].toSorted(comparePatterns);
     expect(sorted.map((entry) => entry.specifier)).toStrictEqual(["#a/ext/*", "#a/*.js", "#a/*"]);
+  });
+});
+
+describe("isParentSpecifier", () => {
+  it("finds a .. segment anywhere in a relative specifier", () => {
+    expect(isParentSpecifier("../x.ts")).toBe(true);
+    expect(isParentSpecifier("./../x.ts")).toBe(true);
+    expect(isParentSpecifier("./sub/../../x.ts")).toBe(true);
+    expect(isParentSpecifier("..")).toBe(true);
+  });
+
+  it("leaves other specifiers alone", () => {
+    expect(isParentSpecifier("./x..ts")).toBe(false);
+    expect(isParentSpecifier("./x.ts?a/../b")).toBe(false);
+    expect(isParentSpecifier("#a/../x.ts")).toBe(false);
+    expect(isParentSpecifier("pkg/../x")).toBe(false);
   });
 });

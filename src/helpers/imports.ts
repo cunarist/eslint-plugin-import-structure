@@ -33,6 +33,14 @@ export function stripQuery(specifier: string): string {
   return alias + specifier.slice(alias.length).replace(QUERY_PATTERN, "");
 }
 
+/**
+ * Whether a relative specifier climbs with a `..` segment anywhere, such as
+ * `../x.ts` or `./sub/../../x.ts`.
+ */
+export function isParentSpecifier(specifier: string): boolean {
+  return specifier.startsWith(".") && stripQuery(specifier).split("/").includes("..");
+}
+
 /** A path written with a Windows drive after a leading slash, as in `/C:/dir`. */
 export const SLASHED_DRIVE_PATTERN: RegExp = /^\/[a-zA-Z]:/u;
 

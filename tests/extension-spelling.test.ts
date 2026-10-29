@@ -22,7 +22,9 @@ function rule(id: string): TestedRule {
 
 /**
  * A file in the `owned/` fixture project, where `#a` owns `a/`, `#f` is the
- * file alias of `b/f.ts`, and `#pat/*` sends `#pat/x` to `a/x`.
+ * file alias of `b/f.ts`, `#pat/*` sends `#pat/x` to `a/x`, `#lib/*` sends
+ * `#lib/x` to `b/x`, and `#xt`, declared first, and `#x` alias `c/x.tsx`
+ * and `c/x.ts`.
  */
 function owned(path: string): string {
   return fixture(`owned/${path}`);
@@ -33,6 +35,9 @@ const MAIN = owned("main.ts");
 const ONE = owned("a/one.ts");
 
 const SIBLING = owned("b/g.ts");
+
+/** A file owned by `#deep`, declared below `#f`. */
+const DEEP = owned("src/x/y/z.ts");
 
 /** A case that fails with the given errors. */
 interface InvalidCase {
@@ -81,12 +86,54 @@ testRule("enforce-layer-order", rule("enforce-layer-order"), {
     ownEntry("#a/index"),
     ownEntry("./index.js"),
     ownEntry("./index"),
+
+    // the layer order sees a file alias's target in any spelling
+    upwardToF("#lib/f.ts"),
+    upwardToF("#lib/f.js"),
+    upwardToF("#lib/f"),
   ],
 });
+
+/** `src/x/y/z.ts`, owned by `#deep`, importing `#f`'s target, declared above. */
+function upwardToF(specifier: string): InvalidCase {
+  return {
+    ...importing(specifier, DEEP),
+    errors: [{ messageId: "upward", data: { owner: "#deep", target: "#f" } }],
+  };
+}
+
+/** `main.ts` reaching `alias`'s target by the path `specifier`, fixed to it. */
+function useAlias(specifier: string, alias: string): InvalidCase {
+  return {
+    ...importing(specifier, MAIN),
+    output: `import { x } from "${alias}";\n`,
+    errors: [{ messageId: "useAlias", data: { specifier, alias } }],
+  };
+}
+
+/** A deeper specifier from `main.ts` past the file alias `#f`. */
+function pastF(specifier: string): InvalidCase {
+  return {
+    ...importing(specifier, MAIN),
+    errors: [
+      {
+        messageId: "bypass",
+        data: { specifier, owner: "#f" },
+        suggestions: [
+          { messageId: "useEntry", data: { owner: "#f" }, output: 'import { x } from "#f";\n' },
+        ],
+      },
+    ],
+  };
+}
 
 testRule("no-barrel-bypass", rule("no-barrel-bypass"), {
   valid: [],
   invalid: [
+    // a pattern naming a file alias's target in another spelling reaches past it
+    pastF("#lib/f.js"),
+    pastF("#lib/f"),
+
     // never the entry point or the importer itself
     ownArea("#pat/index"),
     ownArea("#a/index.js"),
@@ -149,6 +196,12 @@ testRule("prefer-alias-import", rule("prefer-alias-import"), {
       output: 'import { x } from "#a";\n',
       errors: [{ messageId: "useAlias", data: { specifier: "./a/index", alias: "#a" } }],
     },
+
+    // the file TypeScript tries first wins, not the alias declared first
+    useAlias("./c/x", "#x"),
+    useAlias("./c/x.js", "#x"),
+    useAlias("./c/x.tsx", "#xt"),
+    useAlias("./c/x.jsx", "#xt"),
   ],
 });
 

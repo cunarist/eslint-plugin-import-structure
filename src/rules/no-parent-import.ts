@@ -6,6 +6,7 @@ import {
   type ExplicitRule,
   findImportsConfig,
   isOwnedBy,
+  isParentSpecifier,
   quoteLike,
   resolveLocalSpecifier,
   stripQuery,
@@ -13,7 +14,8 @@ import {
 } from "#helpers";
 
 /**
- * `no-parent-import` - rejects `../` specifiers in every file, owned by an
+ * `no-parent-import` - rejects `../` specifiers, and any relative specifier
+ * with a `..` segment, in every file, owned by an
  * alias or not, rewriting one to its `#` alias where `package.json` declares
  * an alias for that file, in any spelling TypeScript resolves to it.
  *
@@ -36,7 +38,7 @@ export const noParentImportRule: ExplicitRule = {
   },
   create(context) {
     return visitSpecifiers((node, specifier) => {
-      if (!specifier.startsWith("../")) {
+      if (!isParentSpecifier(specifier)) {
         return;
       }
       const config = findImportsConfig(context.filename);

@@ -5,6 +5,7 @@ import {
   findImportsConfig,
   findOwningEntry,
   isOwnedBy,
+  isParentSpecifier,
   resolveLocalSpecifier,
   visitSpecifiers,
 } from "#helpers";
@@ -36,7 +37,7 @@ export const noRelativeBypassRule: ExplicitRule = {
     return visitSpecifiers((node, specifier) => {
       // Parent imports belong to "no-parent-import", and bare or "#"
       // specifiers never walk the file tree.
-      if (!specifier.startsWith("./")) {
+      if (!specifier.startsWith("./") || isParentSpecifier(specifier)) {
         return;
       }
       const config = findImportsConfig(context.filename);
