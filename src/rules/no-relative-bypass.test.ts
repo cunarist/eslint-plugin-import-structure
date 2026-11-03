@@ -6,13 +6,20 @@ const SRC = fixture("src/index.ts");
 
 const COMPONENTS = fixture("src/components/index.ts");
 
+const subfolderCode =
+  'import { a } from "./sub/deep/thing.ts";\nimport { b } from "./sub/deep/index.ts";\nimport { c } from "./sub/thing.ts";\n';
+
 const internalCode = 'import { internal } from "./components/internal.ts";\n';
 
 testRule("no-relative-bypass", noRelativeBypassRule, {
   valid: [
-    // allows siblings and subfolders at any depth inside one area
+    // allows siblings and a direct subfolder's index.ts inside one area
     {
-      code: 'import { a } from "./internal.ts";\nimport { b } from "./sub/deep/thing.ts";\n',
+      code: 'import { a } from "./internal.ts";\nimport { b } from "./sub/index.ts";\n',
+      filename: COMPONENTS,
+    },
+    {
+      code: 'import { b } from "./sub/index.js";\nimport { c } from "./sub/index";\nimport { d } from "./sub";\n',
       filename: COMPONENTS,
     },
 
@@ -38,10 +45,6 @@ testRule("no-relative-bypass", noRelativeBypassRule, {
       filename: fixture("scripts/build.ts"),
     },
     {
-      code: 'import { thing } from "./unmapped/thing.ts";\n',
-      filename: fixture("src/utils/index.ts"),
-    },
-    {
       code: 'import { thing } from "./unmapped/deep/thing.ts";\n',
       filename: SRC,
     },
@@ -51,6 +54,26 @@ testRule("no-relative-bypass", noRelativeBypassRule, {
     { code: 'import { y } from "./y.ts";\n', filename: fixture("nested/a/x.ts") },
   ],
   invalid: [
+    // rejects a path past a subfolder's index.ts inside one area
+    {
+      code: subfolderCode,
+      filename: COMPONENTS,
+      errors: [
+        {
+          messageId: "subfolder",
+          data: { specifier: "./sub/deep/thing.ts" },
+          ...spanOf(subfolderCode, '"./sub/deep/thing.ts"'),
+        },
+        { messageId: "subfolder", data: { specifier: "./sub/deep/index.ts" } },
+        { messageId: "subfolder", data: { specifier: "./sub/thing.ts" } },
+      ],
+    },
+    {
+      code: 'import { thing } from "./unmapped/thing.ts";\n',
+      filename: fixture("src/utils/index.ts"),
+      errors: [{ messageId: "subfolder", data: { specifier: "./unmapped/thing.ts" } }],
+    },
+
     // rejects a path from an outer area into an alias nested in it
     {
       code: 'import { x } from "./sub/x.ts";\n',

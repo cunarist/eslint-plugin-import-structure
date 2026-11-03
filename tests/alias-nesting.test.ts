@@ -3,8 +3,8 @@
  * owns its part, carved out of the outer area, and the outer alias owns the
  * rest, so every file has one owner: the alias with the deepest area holding
  * it. Each part is reached from outside only through its own alias, a path
- * from the outer area into the inner one included, relative imports stay
- * free inside each part, and the two aliases are ordered like any other pair.
+ * from the outer area into the inner one included, inside each part a
+ * subfolder is reached only through its own `index.ts`, and the two aliases are ordered like any other pair.
  */
 
 import plugin from "#plugin";
@@ -92,11 +92,11 @@ testRule("no-relative-bypass", rule("no-relative-bypass"), {
   valid: [
     // relative imports inside the inner area
     importing("./y.ts", SUB),
-    importing("./deep/z.ts", SUB),
+    importing("./deep/index.ts", SUB),
 
     // relative imports inside the outer area, outside the inner one
     importing("./y.ts", A),
-    importing("./other/z.ts", A),
+    importing("./other/index.ts", A),
     importing("./y.ts", A_INDEX),
     importing("./y.ts", nested("d/other.ts")),
   ],
@@ -113,6 +113,10 @@ testRule("no-relative-bypass", rule("no-relative-bypass"), {
 
     // a file alias owns only itself, so its folder is the outer area
     { ...importing("./y.ts", D_FILE), errors: [bypass("./y.ts", "#d")] },
+
+    // inside each part, a subfolder only through its own index.ts
+    { ...importing("./deep/z.ts", SUB), errors: [{ messageId: "subfolder" }] },
+    { ...importing("./other/z.ts", A), errors: [{ messageId: "subfolder" }] },
   ],
 });
 

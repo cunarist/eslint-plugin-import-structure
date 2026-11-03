@@ -60,7 +60,12 @@ subfolders" rule as the general rule, and the "modules plugin checks only aliase
   specifier (`#a/one.ts`, `no-barrel-bypass`) and a relative path into the
   area (`./a/one.ts`, `no-relative-bypass`; `./b/f.ts` to a file alias,
   `prefer-alias-import`, fixed to the alias) are bypasses.
-- **Inside an area, relative imports of siblings and subfolders are free.**
+- **Inside an area, siblings are free; a subfolder only through its direct
+  `index.ts`** (user rule 2026-11-03, like Rust `mod.rs`; `no-relative-bypass`
+  `subfolder`, any spelling of the index stem). `./other/deep.ts` and
+  `./other/inner/index.ts` fire, even with no `other/index.ts`. A directory
+  specifier `./other` reads as a sibling and stays free. Importers no alias
+  owns, and file-alias importers reaching unowned files, stay free.
 - **`../` is banned in every file**, owned or not (`no-parent-import`).
   Anything above a file needs an alias.
 - **Files no alias owns** need no `index.ts` and no alias, and import `./`
@@ -88,7 +93,8 @@ import { f } from "./b/f.ts"; // no: relative path to a file alias
 import { g } from "./b/g.ts"; // yes: unowned
 // in a/one.ts, owned by #a
 import { two } from "./two.ts"; // yes: sibling
-import { deep } from "./other/deep.ts"; // yes: subfolder of the same area
+import { other } from "./other/index.ts"; // yes: direct subfolder index
+import { deep } from "./other/deep.ts"; // no: past ./other/index.ts
 import { s } from "./sub/x.ts"; // no: inside #a-sub, use "#a-sub"
 import { x } from "../x.ts"; // no: no ../ anywhere
 ```

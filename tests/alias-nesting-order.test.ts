@@ -85,9 +85,10 @@ testRule("no-relative-bypass", rule("no-relative-bypass"), {
     importing("./y.ts", E),
     importing("./y.ts", G),
     importing("./y.ts", G_MID),
-    importing("./deep/y.ts", G_IN),
+    importing("./deep/index.ts", G_IN),
   ],
   invalid: [
+    { ...importing("./deep/y.ts", G_IN), errors: [{ messageId: "subfolder" }] },
     { ...importing("./sub/x.ts", E), errors: [bypass("./sub/x.ts", "#e-sub")] },
     { ...importing("./e/sub/x.ts", MAIN), errors: [bypass("./e/sub/x.ts", "#e-sub")] },
     { ...importing("./mid/x.ts", G), errors: [bypass("./mid/x.ts", "#g-mid")] },

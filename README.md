@@ -88,7 +88,7 @@ The rules never depend on folder or file names; an alias may point anywhere.
 - An alias may sit inside another alias's area. The deeper alias owns its part, carved out of the outer area, and the outer alias owns the rest; the two are ordered like any other pair of aliases.
 - No 2 aliases may have the same area, such as the same target or 2 `index` files in one folder. `enforce-layer-order` reports an overlap once at the top of every file both own, since lint cannot report on `package.json`.
 - Outside an area, any other route to an owned file is a bypass: a deeper alias specifier such as `#a/one.ts` (`no-barrel-bypass`), or a relative path (`no-relative-bypass`, and `prefer-alias-import`, which rewrites a path to the alias's target, in any spelling TypeScript resolves to it).
-- Inside an area, relative imports of siblings and subfolders are free.
+- Inside an area, siblings are free, and a subfolder is reached only through its direct `index.ts`, like a Rust `mod.rs` (`no-relative-bypass`); a path deeper in the subfolder, a grandchild's `index.ts` included, fires, and a subfolder without an `index.ts` cannot be imported at all.
 - `../` is banned in every file, owned or not (`no-parent-import`). Anything above a file needs an alias.
 - Files no alias owns need no `index.ts` and no alias, and import `./` siblings and subfolders freely.
 - Don't declare `/*` subpath patterns: any use of one that reaches an owned area is a bypass (`no-barrel-bypass`). Entry points are named `index.ts` only (`enforce-mod-file`).
@@ -109,7 +109,8 @@ import { f } from "./b/f.ts"; // ❌ relative path to a file alias; use "#f"
 import { g } from "./b/g.ts"; // ✅ unowned
 // in a/one.ts, owned by #a
 import { two } from "./two.ts"; // ✅ sibling
-import { deep } from "./other/deep.ts"; // ✅ subfolder of the same area
+import { other } from "./other/index.ts"; // ✅ direct subfolder's index.ts
+import { deep } from "./other/deep.ts"; // ❌ past ./other/index.ts
 import { sub } from "./sub/x.ts"; // ❌ relative path into #a-sub
 import { sub } from "#a/sub/x.ts"; // ❌ deeper alias specifier; use "#a-sub"
 ```
@@ -126,19 +127,19 @@ The other rules (import order, duplicate sources, wildcards, absolute paths, sel
 🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).\
 💡 Manually fixable by [editor suggestions](https://eslint.org/docs/latest/use/core-concepts#rule-suggestions).
 
-| Name                                                                   | Description                                                                  | 💼 | 🔧 | 💡 |
-| :--------------------------------------------------------------------- | :--------------------------------------------------------------------------- | :- | :- | :- |
-| [enforce-import-order](docs/rules/enforce-import-order.md)             | Enforce grouped and sorted import declarations and import members            | 🧭 | 🔧 |    |
-| [enforce-layer-order](docs/rules/enforce-layer-order.md)               | Enforce the order of `package.json` `imports` as the layer order             | 🧭 |    |    |
-| [enforce-mod-file](docs/rules/enforce-mod-file.md)                     | Enforce `index.ts` as the name of module entry points                        | 🧭 |    |    |
-| [no-absolute-import](docs/rules/no-absolute-import.md)                 | Disallow absolute paths and `file:` URLs as module specifiers                | 🧭 |    |    |
-| [no-barrel-bypass](docs/rules/no-barrel-bypass.md)                     | Disallow `#` specifiers deeper than an alias                                 | 🧭 |    | 💡 |
-| [no-duplicate-import-source](docs/rules/no-duplicate-import-source.md) | Disallow separate import declarations from the same source                   | 🧭 |    |    |
-| [no-parent-import](docs/rules/no-parent-import.md)                     | Disallow parent-relative module specifiers                                   | 🧭 | 🔧 |    |
-| [no-relative-bypass](docs/rules/no-relative-bypass.md)                 | Disallow relative specifiers that reach into an alias's area from outside it | 🧭 |    |    |
-| [no-self-import](docs/rules/no-self-import.md)                         | Disallow a module from importing itself                                      | 🧭 |    |    |
-| [no-wildcard-import](docs/rules/no-wildcard-import.md)                 | Disallow namespace imports                                                   | 🧭 |    |    |
-| [prefer-alias-import](docs/rules/prefer-alias-import.md)               | Require the `#` alias for a module that `package.json` declares              | 🧭 | 🔧 |    |
+| Name                                                                   | Description                                                                                                   | 💼 | 🔧 | 💡 |
+| :--------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :- | :- | :- |
+| [enforce-import-order](docs/rules/enforce-import-order.md)             | Enforce grouped and sorted import declarations and import members                                             | 🧭 | 🔧 |    |
+| [enforce-layer-order](docs/rules/enforce-layer-order.md)               | Enforce the order of `package.json` `imports` as the layer order                                              | 🧭 |    |    |
+| [enforce-mod-file](docs/rules/enforce-mod-file.md)                     | Enforce `index.ts` as the name of module entry points                                                         | 🧭 |    |    |
+| [no-absolute-import](docs/rules/no-absolute-import.md)                 | Disallow absolute paths and `file:` URLs as module specifiers                                                 | 🧭 |    |    |
+| [no-barrel-bypass](docs/rules/no-barrel-bypass.md)                     | Disallow `#` specifiers deeper than an alias                                                                  | 🧭 |    | 💡 |
+| [no-duplicate-import-source](docs/rules/no-duplicate-import-source.md) | Disallow separate import declarations from the same source                                                    | 🧭 |    |    |
+| [no-parent-import](docs/rules/no-parent-import.md)                     | Disallow parent-relative module specifiers                                                                    | 🧭 | 🔧 |    |
+| [no-relative-bypass](docs/rules/no-relative-bypass.md)                 | Disallow relative specifiers that reach into an alias's area from outside it or past a subfolder's index file | 🧭 |    |    |
+| [no-self-import](docs/rules/no-self-import.md)                         | Disallow a module from importing itself                                                                       | 🧭 |    |    |
+| [no-wildcard-import](docs/rules/no-wildcard-import.md)                 | Disallow namespace imports                                                                                    | 🧭 |    |    |
+| [prefer-alias-import](docs/rules/prefer-alias-import.md)               | Require the `#` alias for a module that `package.json` declares                                               | 🧭 | 🔧 |    |
 
 <!-- end auto-generated rules list -->
 <!-- prettier-ignore-end -->

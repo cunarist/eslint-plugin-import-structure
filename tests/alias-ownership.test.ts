@@ -2,8 +2,9 @@
  * Regression: an alias owns its target. An alias to a folder's `index.ts`
  * owns that folder and everything below it; an alias to any other file owns
  * only that file. Outside an owned area, only the exact alias reaches it;
- * inside, relative imports of siblings and subfolders are free. `../` is
- * banned in every file, and files no alias owns import `./` paths freely.
+ * inside, siblings are free and a subfolder is reached only through its
+ * direct `index.ts`. `../` is banned in every file, and files no alias owns
+ * import `./` paths freely.
  * Nothing here depends on folder names: aliases sit at any depth and in any
  * top-level folder, and a target need not exist yet.
  */
@@ -38,6 +39,9 @@ const ONE = owned("a/one.ts");
 const SIBLING = owned("b/g.ts");
 
 const FILE_ALIAS = owned("b/f.ts");
+
+/** The one error of a path past a subfolder's `index.ts`. */
+const SUBFOLDER: { messageId: string }[] = [{ messageId: "subfolder" }];
 
 /** One import of `specifier`, linted as `filename`. */
 function importing(specifier: string, filename: string): { code: string; filename: string } {
@@ -77,11 +81,13 @@ testRule("no-parent-import", rule("no-parent-import"), {
 
 testRule("no-relative-bypass", rule("no-relative-bypass"), {
   valid: [
-    // inside an area, siblings and subfolders at any depth
+    // inside an area, siblings and a direct subfolder's index.ts, in any spelling
     importing("./two.ts", ONE),
-    importing("./sub/deep.ts", ONE),
-    importing("./sub/deeper/x.ts", owned("a/index.ts")),
-    importing("./z/w.ts", owned("src/x/y/index.ts")),
+    importing("./sub/index.ts", ONE),
+    importing("./sub/index.js", ONE),
+    importing("./sub/index", ONE),
+    importing("./sub", ONE),
+    importing("./z/index.ts", owned("src/x/y/index.ts")),
 
     // files no alias owns, from anywhere, with no index.ts demanded
     importing("./b/g.ts", MAIN),
@@ -103,7 +109,6 @@ testRule("no-relative-bypass", rule("no-relative-bypass"), {
     importing("./scripts/decorators.ts", fixture("vite.config.ts")),
     importing("./scripts/mod.ts", fixture("vite.config.ts")),
     importing("./sub/deep/thing.ts", fixture("scripts/build.ts")),
-    importing("./utils/y.ts", fixture("src/types/index.ts")),
   ],
   invalid: [
     // a relative path into an area from outside it
@@ -132,6 +137,13 @@ testRule("no-relative-bypass", rule("no-relative-bypass"), {
       ...importing("./src/utils/y.ts", fixture("vite.config.ts")),
       errors: [{ messageId: "bypass", data: { specifier: "./src/utils/y.ts", alias: "#utils" } }],
     },
+
+    // inside an area, a subfolder only through its direct index.ts
+    { ...importing("./sub/deep.ts", ONE), errors: SUBFOLDER },
+    { ...importing("./sub/deeper/x.ts", owned("a/index.ts")), errors: SUBFOLDER },
+    { ...importing("./sub/deeper/index.ts", owned("a/index.ts")), errors: SUBFOLDER },
+    { ...importing("./z/w.ts", owned("src/x/y/index.ts")), errors: SUBFOLDER },
+    { ...importing("./utils/y.ts", fixture("src/types/index.ts")), errors: SUBFOLDER },
   ],
 });
 
