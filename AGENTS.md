@@ -61,8 +61,9 @@ and follow it before reasoning or responding.
   target (a folder's `index.ts` owns that folder and everything below it;
   any other file owns only itself) minus the area of any deeper alias
   inside it, 2 aliases with the same area are an error, code
-  outside an area reaches it only through the exact alias, relative imports
-  inside an area are free, and `../` is banned in every file. This repo's
+  outside an area reaches it only through the exact alias, inside an area
+  siblings are free and a subfolder is reached only through its direct
+  `index.ts` (`no-relative-bypass`), and `../` is banned in every file. This repo's
   aliases, in layer order (`enforce-layer-order`): `#plugin`, `#rules`,
   `#testing`, `#helpers`. `vite.config.ts` imports the plugin through
   `#plugin` and `./scripts/project-lint.ts` by path, free because no alias

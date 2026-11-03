@@ -59,8 +59,10 @@ function importing(specifier: string, filename: string): { code: string; filenam
 
 testRule("no-relative-bypass", rule("no-relative-bypass"), {
   // c/x.ts is owned by both #c and #c2, so c/ is inside either area
-  valid: [importing("./y.ts", overlap("c/x.ts")), importing("./sub/y.ts", overlap("c/x.ts"))],
-  invalid: [],
+  valid: [importing("./y.ts", overlap("c/x.ts")), importing("./sub/index.ts", overlap("c/x.ts"))],
+  invalid: [
+    { ...importing("./sub/y.ts", overlap("c/x.ts")), errors: [{ messageId: "subfolder" }] },
+  ],
 });
 
 testRule("prefer-alias-import", rule("prefer-alias-import"), {
